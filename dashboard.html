@@ -1235,10 +1235,10 @@
     <div class="page" id="page-profile">
       <div class="content-pad">
 
-        <!-- Шапка -->
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+        <!-- ── ШАПКА ── -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap">
           <div>
-            <span class="eyebrow">Аккаунт · Firebase Auth</span>
+            <span class="eyebrow">Аккаунт · Firebase Auth + RTDB</span>
             <div class="section-title">Мой профиль</div>
           </div>
           <button class="btn btn-p" id="prof-save-btn">
@@ -1247,100 +1247,114 @@
           </button>
         </div>
 
-        <div style="display:grid;grid-template-columns:300px 1fr;gap:2px;align-items:start">
-
-          <!-- ── ЛЕВАЯ КОЛОНКА: аватар + Firebase данные ── -->
-          <div style="display:flex;flex-direction:column;gap:2px">
-
-            <!-- Аватар-карточка -->
-            <div class="card card-accent" style="padding:28px 20px;text-align:center">
-              <!-- Большой аватар -->
-              <div style="position:relative;display:inline-block;margin-bottom:16px">
-                <div id="prof-avatar-big" style="
-                  width:80px;height:80px;
-                  background:var(--accent-dim);border:2px solid var(--accent-mid);
-                  border-radius:50%;
-                  display:flex;align-items:center;justify-content:center;
-                  font-family:var(--font-display);font-weight:800;
-                  font-size:2rem;color:var(--accent);
-                  margin:0 auto;
-                  transition:border-color var(--t);
-                ">Г</div>
-                <!-- Статус онлайн -->
-                <div style="position:absolute;bottom:4px;right:4px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid var(--surface);animation:pulse-g 2.5s ease-in-out infinite"></div>
-              </div>
-
-              <div id="prof-name-display" style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:#fff;line-height:1.2;margin-bottom:4px">—</div>
-              <div id="prof-role-display" style="font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:4px">—</div>
-              <div id="prof-email-display" style="font-size:.72rem;color:var(--muted)">—</div>
+        <!-- ── HERO-КАРТОЧКА аккаунта ── -->
+        <div class="card card-accent" style="margin-bottom:2px;padding:0;overflow:hidden">
+          <!-- Декоративная шапка -->
+          <div style="height:72px;background:linear-gradient(135deg,var(--surface-3) 0%,var(--surface-2) 50%,var(--surface-3) 100%);position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(200,169,110,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(200,169,110,.04) 1px,transparent 1px);background-size:32px 32px"></div>
+          </div>
+          <!-- Основное содержимое -->
+          <div style="padding:0 24px 22px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-top:-32px;position:relative">
+            <!-- Аватар -->
+            <div id="prof-avatar-big" style="width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:1.6rem;color:var(--accent);flex-shrink:0;position:relative">
+              Г
+              <div style="position:absolute;bottom:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--surface);animation:pulse-g 2.5s ease-in-out infinite"></div>
             </div>
+            <!-- Инфо -->
+            <div style="flex:1;min-width:0;padding-top:36px">
+              <div id="prof-name-display" style="font-family:var(--font-display);font-weight:800;font-size:1.2rem;color:#fff;line-height:1.1;margin-bottom:3px">—</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span id="prof-role-display" style="font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)">—</span>
+                <span id="prof-email-display" style="font-size:.72rem;color:var(--muted)">—</span>
+              </div>
+            </div>
+            <!-- Статистика -->
+            <div style="display:flex;gap:2px;flex-wrap:wrap;margin-left:auto;padding-top:36px">
+              <div style="background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;text-align:center;min-width:72px">
+                <div style="font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:#fff;line-height:1" id="prof-stat-reports">—</div>
+                <div style="font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:3px">Отчётов</div>
+              </div>
+              <div style="background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;text-align:center;min-width:72px">
+                <div style="font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--red);line-height:1" id="prof-stat-viol">—</div>
+                <div style="font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:3px">Нарушений</div>
+              </div>
+              <div style="background:var(--surface-2);border:1px solid var(--border);padding:10px 16px;text-align:center;min-width:72px">
+                <div style="font-family:var(--font-display);font-weight:800;font-size:1.3rem;color:var(--green);line-height:1" id="prof-stat-orders">—</div>
+                <div style="font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:3px">Заказов</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ДВУХКОЛОНОЧНАЯ СЕТКА ── -->
+        <div id="prof-grid" style="display:grid;grid-template-columns:280px 1fr;gap:2px;align-items:start">
+
+          <!-- ЛЕВАЯ КОЛОНКА -->
+          <div style="display:flex;flex-direction:column;gap:2px">
 
             <!-- Firebase Auth мета -->
             <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px">Firebase Auth</div>
-              <div style="display:flex;flex-direction:column;gap:10px">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">UID</span>
-                  <code id="prof-uid" style="font-size:.62rem;font-family:var(--font-mono,monospace);color:var(--muted-2);background:var(--surface-2);padding:2px 6px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="">—</code>
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+                Firebase Auth
+                <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="font-size:.7rem;color:var(--muted);flex-shrink:0">UID</span>
+                  <code id="prof-uid" style="font-size:.6rem;font-family:var(--font-mono,monospace);color:var(--muted-2);background:var(--surface-2);padding:3px 7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:155px;display:block;cursor:help" title="Кликни чтобы скопировать">—</code>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">Email</span>
-                  <span id="prof-email-meta" style="font-size:.72rem;color:var(--text);text-align:right">—</span>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="font-size:.7rem;color:var(--muted);flex-shrink:0">Email</span>
+                  <span id="prof-email-meta" style="font-size:.72rem;color:var(--text);text-align:right;word-break:break-all">—</span>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">Подтверждён</span>
-                  <span id="prof-verified" style="font-size:.64rem"></span>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="font-size:.7rem;color:var(--muted);flex-shrink:0">Статус</span>
+                  <span id="prof-verified"></span>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">Провайдер</span>
-                  <span id="prof-provider" style="font-size:.64rem;color:var(--text)">—</span>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="font-size:.7rem;color:var(--muted);flex-shrink:0">Провайдер</span>
+                  <span id="prof-provider" style="font-size:.68rem;color:var(--text)">—</span>
                 </div>
+
                 <div style="height:1px;background:var(--border)"></div>
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">Регистрация</span>
-                  <span id="prof-created" style="font-size:.68rem;color:var(--muted-2);text-align:right">—</span>
+
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <span style="font-size:.7rem;color:var(--muted)">Регистрация</span>
+                  </div>
+                  <div id="prof-created" style="font-size:.66rem;color:var(--muted-2)">—</div>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-                  <span style="font-size:.72rem;color:var(--muted)">Последний вход</span>
-                  <span id="prof-last-login" style="font-size:.68rem;color:var(--muted-2);text-align:right">—</span>
+
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <div style="font-size:.7rem;color:var(--muted)">Последний вход</div>
+                  <div id="prof-last-login" style="font-size:.66rem;color:var(--muted-2)">—</div>
                 </div>
+
               </div>
             </div>
 
-            <!-- Статистика по отчётам -->
+            <!-- История активности -->
             <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px">Активность в системе</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
-                <div style="background:var(--surface-2);border:1px solid var(--border);padding:12px 10px;text-align:center">
-                  <div style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;line-height:1" id="prof-stat-reports">—</div>
-                  <div style="font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:4px">Отчётов</div>
-                </div>
-                <div style="background:var(--surface-2);border:1px solid var(--border);padding:12px 10px;text-align:center">
-                  <div style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:var(--red);line-height:1" id="prof-stat-viol">—</div>
-                  <div style="font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:4px">Нарушений</div>
-                </div>
-                <div style="background:var(--surface-2);border:1px solid var(--border);padding:12px 10px;text-align:center">
-                  <div style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:#fff;line-height:1" id="prof-stat-pos">—</div>
-                  <div style="font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:4px">Позиций</div>
-                </div>
-                <div style="background:var(--surface-2);border:1px solid var(--border);padding:12px 10px;text-align:center">
-                  <div style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:var(--green);line-height:1" id="prof-stat-orders">—</div>
-                  <div style="font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin-top:4px">Заказов</div>
-                </div>
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-2);margin-bottom:12px">Активность</div>
+              <div id="prof-activity" style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:.74rem;color:var(--muted-2)">Загрузка…</div>
               </div>
             </div>
 
           </div>
 
-          <!-- ── ПРАВАЯ КОЛОНКА: редактируемые данные ── -->
+          <!-- ПРАВАЯ КОЛОНКА -->
           <div style="display:flex;flex-direction:column;gap:2px">
 
             <!-- Личная информация -->
             <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
                 Личная информация
                 <span style="flex:1;height:1px;background:var(--border);display:block"></span>
-                <span style="font-size:.58rem;color:var(--muted-2);letter-spacing:.1em;font-family:inherit">Хранится в Firebase RTDB</span>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div class="field">
@@ -1361,21 +1375,21 @@
                 </div>
                 <div class="field" style="grid-column:1/-1">
                   <label>О себе</label>
-                  <textarea id="prof-bio" placeholder="Краткое описание, обязанности…" style="min-height:80px"></textarea>
+                  <textarea id="prof-bio" placeholder="Краткое описание, обязанности…" style="min-height:72px;resize:vertical"></textarea>
                 </div>
               </div>
             </div>
 
             <!-- Принадлежность -->
             <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
-                Принадлежность
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                Организация
                 <span style="flex:1;height:1px;background:var(--border);display:block"></span>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                 <div class="field">
                   <label>Компания</label>
-                  <input type="text" id="prof-company" placeholder="Galelium Corporation" />
+                  <input type="text" id="prof-company" value="Galelium Corporation" />
                 </div>
                 <div class="field">
                   <label>Отдел</label>
@@ -1394,7 +1408,7 @@
 
             <!-- Безопасность -->
             <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px">
                 Безопасность
                 <span style="flex:1;height:1px;background:var(--border);display:block"></span>
               </div>
@@ -1412,40 +1426,24 @@
                 <button class="btn btn-sm" id="prof-change-pass">Изменить пароль</button>
                 <button class="btn btn-sm" id="prof-send-reset">Сбросить через email</button>
               </div>
-              <div id="prof-pass-msg" style="font-size:.72rem;margin-top:8px;display:none"></div>
-            </div>
-
-            <!-- История активности -->
-            <div class="card card-pad">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:14px">Последние действия</div>
-              <div id="prof-activity" style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:.76rem;color:var(--muted-2)">Загрузка…</div>
-              </div>
+              <div id="prof-pass-msg" style="font-size:.72rem;margin-top:8px;display:none;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border)"></div>
             </div>
 
             <!-- Опасная зона -->
-            <div class="card card-pad" style="border-color:rgba(208,96,112,.2)">
-              <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+            <div class="card card-pad" style="border-color:rgba(208,96,112,.18)">
+              <div style="font-size:.57rem;letter-spacing:.22em;text-transform:uppercase;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:8px">
                 Опасная зона
-                <span style="flex:1;height:1px;background:rgba(208,96,112,.2);display:block"></span>
+                <span style="flex:1;height:1px;background:rgba(208,96,112,.18);display:block"></span>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
                 <div>
                   <div style="font-size:.8rem;color:var(--text)">Выйти из аккаунта</div>
-                  <div style="font-size:.68rem;color:var(--muted);margin-top:2px">Завершить текущую сессию Firebase</div>
+                  <div style="font-size:.68rem;color:var(--muted);margin-top:2px">Завершить сессию Firebase Auth</div>
                 </div>
                 <button class="btn btn-sm btn-danger" id="prof-logout-btn">Выйти</button>
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- Уведомление о сохранении -->
-        <div id="prof-saved-toast" style="display:none;margin-top:14px">
-          <div style="display:flex;align-items:center;gap:10px;background:var(--green-dim);border:1px solid rgba(76,175,130,.25);padding:11px 16px;font-size:.76rem;color:var(--text)">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--green)" stroke-width="1.2"/><path d="M4.5 7l2 2 3.5-3.5" stroke="var(--green)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Профиль сохранён в Firebase RTDB
           </div>
         </div>
 
@@ -1504,9 +1502,9 @@
 <script type="module">
   import { initializeApp }
     from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-  import { getAuth, onAuthStateChanged, signOut }
+  import { getAuth, onAuthStateChanged, signOut, updateProfile, updatePassword, sendPasswordResetEmail }
     from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-  import { getDatabase, ref, onValue, set, remove, push, get }
+  import { getDatabase, ref, onValue, set, update, remove, push, get }
     from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js';
 
   /* ── КОНФИГ ─────────────────────────────────────────────── */
@@ -1555,14 +1553,18 @@
 
     /* ─── Загружаем расширенный профиль из RTDB /users/{uid} ─── */
     const userRef = ref(db, 'users/' + user.uid);
-    onValue(userRef, (snap) => {
-      const data = snap.val() || {};
-      fillRtdbProfile(data);
 
-      /* Записываем lastSeen при каждом входе */
-      const updates = { lastSeen: new Date().toISOString() };
-      if (!data.createdAt) updates.createdAt = user.metadata.creationTime || new Date().toISOString();
-      set(ref(db, 'users/' + user.uid), { ...data, ...updates });
+    /* Записываем lastSeen один раз при входе — отдельно от onValue */
+    const loginUpdate = { lastSeen: new Date().toISOString() };
+    get(userRef).then(snap => {
+      const d = snap.val() || {};
+      if (!d.createdAt) loginUpdate.createdAt = user.metadata.creationTime || new Date().toISOString();
+      update(userRef, loginUpdate);
+    });
+
+    /* Слушаем профиль в реальном времени (заполняет форму) */
+    onValue(userRef, (snap) => {
+      fillRtdbProfile(snap.val() || {});
     });
 
     /* Загружаем данные отчётов */
@@ -1768,7 +1770,10 @@
   /* Кнопка «Сохранить изменения» — пишет в /users/{uid} */
   document.getElementById('prof-save-btn')?.addEventListener('click', async () => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) { toast('Не авторизован', 'err'); return; }
+
+    const btn = document.getElementById('prof-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Сохранение…'; }
 
     const gv = (id) => document.getElementById(id)?.value.trim() || '';
 
@@ -1785,23 +1790,25 @@
       updatedAt:   new Date().toISOString()
     };
 
+    /* Убираем пустые поля чтобы не перезаписать нулями */
+    Object.keys(profileData).forEach(k => {
+      if (profileData[k] === '' && k !== 'updatedAt') delete profileData[k];
+    });
+
     try {
-      /* Сохраняем в /users/{uid} */
-      const snap = await get(ref(db, 'users/' + user.uid));
-      const existing = snap.val() || {};
-      await set(ref(db, 'users/' + user.uid), { ...existing, ...profileData });
+      /* update() — патч, не затирает другие поля */
+      await update(ref(db, 'users/' + user.uid), profileData);
 
       /* Обновляем displayName в Firebase Auth если изменилось */
       if (profileData.displayName && profileData.displayName !== user.displayName) {
-        const { updateProfile } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js');
         await updateProfile(user, { displayName: profileData.displayName });
       }
 
-      /* Обновляем sidebar */
+      /* Обновляем sidebar и шапку профиля */
       if (profileData.displayName) {
-        setText('sb-name', profileData.displayName);
-        setText('sb-avatar', profileData.displayName.charAt(0).toUpperCase());
-        setText('prof-name-display', profileData.displayName);
+        setText('sb-name',          profileData.displayName);
+        setText('sb-avatar',        profileData.displayName.charAt(0).toUpperCase());
+        setText('prof-name-display',profileData.displayName);
         const av = document.getElementById('prof-avatar-big');
         if (av) av.textContent = profileData.displayName.charAt(0).toUpperCase();
       }
@@ -1811,59 +1818,69 @@
         if (rEl) rEl.textContent = profileData.role;
       }
 
-      /* Toast и анимация */
-      const savedToast = document.getElementById('prof-saved-toast');
-      if (savedToast) {
-        savedToast.style.display = 'block';
-        setTimeout(() => savedToast.style.display = 'none', 3000);
-      }
       toast('Профиль сохранён ✓', 'ok');
 
-    } catch(e) {
-      console.error(e);
-      toast('Ошибка сохранения: ' + e.message, 'err');
+      /* Зелёная анимация на кнопке */
+      if (btn) {
+        btn.textContent = '✓ Сохранено';
+        btn.style.background = 'var(--green)';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Сохранить изменения';
+          btn.style.background = '';
+        }, 2000);
+      }
+
+    } catch(err) {
+      console.error('Profile save error:', err);
+      toast('Ошибка: ' + (err.message || err.code || 'неизвестная ошибка'), 'err');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Сохранить изменения';
+      }
     }
   });
 
   /* Смена пароля */
   document.getElementById('prof-change-pass')?.addEventListener('click', async () => {
-    const { updatePassword, reauthenticateWithCredential, EmailAuthProvider } =
-      await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js');
     const user    = auth.currentUser;
-    const newPass = document.getElementById('prof-pass-new')?.value;
-    const confirm = document.getElementById('prof-pass-confirm')?.value;
+    const newPass = document.getElementById('prof-pass-new')?.value || '';
+    const confirm = document.getElementById('prof-pass-confirm')?.value || '';
     const msgEl   = document.getElementById('prof-pass-msg');
 
-    if (!newPass || newPass.length < 6) {
-      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--red)'; msgEl.textContent='Пароль должен быть не менее 6 символов'; }
-      return;
-    }
-    if (newPass !== confirm) {
-      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--red)'; msgEl.textContent='Пароли не совпадают'; }
-      return;
-    }
+    const showMsg = (txt, ok) => {
+      if (!msgEl) return;
+      msgEl.style.display  = 'block';
+      msgEl.style.color    = ok ? 'var(--green)' : 'var(--red)';
+      msgEl.textContent    = txt;
+    };
+
+    if (newPass.length < 6) { showMsg('Пароль должен быть не менее 6 символов', false); return; }
+    if (newPass !== confirm) { showMsg('Пароли не совпадают', false); return; }
+
     try {
       await updatePassword(user, newPass);
-      document.getElementById('prof-pass-new').value = '';
+      document.getElementById('prof-pass-new').value     = '';
       document.getElementById('prof-pass-confirm').value = '';
-      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--green)'; msgEl.textContent='Пароль успешно изменён'; }
+      showMsg('Пароль успешно изменён', true);
       toast('Пароль изменён ✓', 'ok');
-    } catch(e) {
-      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--red)'; msgEl.textContent=e.code==='auth/requires-recent-login'?'Требуется повторный вход — выйди и войди снова':e.message; }
+    } catch(err) {
+      showMsg(err.code === 'auth/requires-recent-login'
+        ? 'Требуется повторный вход — выйди и войди снова'
+        : (err.message || err.code), false);
     }
   });
 
   /* Сброс пароля через email */
   document.getElementById('prof-send-reset')?.addEventListener('click', async () => {
-    const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js');
     const user  = auth.currentUser;
     const msgEl = document.getElementById('prof-pass-msg');
     try {
       await sendPasswordResetEmail(auth, user.email);
-      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--green)'; msgEl.textContent='Письмо со сбросом отправлено на ' + user.email; }
+      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--green)'; msgEl.textContent='Письмо отправлено на ' + user.email; }
       toast('Письмо отправлено ✓', 'ok');
-    } catch(e) {
-      toast('Ошибка: ' + e.message, 'err');
+    } catch(err) {
+      if (msgEl) { msgEl.style.display='block'; msgEl.style.color='var(--red)'; msgEl.textContent=err.message || err.code; }
     }
   });
 
@@ -2265,6 +2282,29 @@
       setTimeout(() => el.classList.add('show'), 10);
       toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
     }
+
+    /* ── ПРОФИЛЬ — UID copy ──────────────────────────────── */
+    const uidEl2 = document.getElementById('prof-uid');
+    if (uidEl2) {
+      uidEl2.style.cursor = 'pointer';
+      uidEl2.title = 'Нажми чтобы скопировать';
+      uidEl2.addEventListener('click', () => {
+        navigator.clipboard?.writeText(uidEl2.textContent.trim()).then(() => {
+          const orig = uidEl2.textContent;
+          uidEl2.textContent = '✓ скопировано';
+          setTimeout(() => uidEl2.textContent = orig, 1500);
+        });
+      });
+    }
+
+    /* Адаптив профиля */
+    function handleProfileResize() {
+      const grid = document.getElementById('prof-grid');
+      if (!grid) return;
+      grid.style.gridTemplateColumns = window.innerWidth < 860 ? '1fr' : '280px 1fr';
+    }
+    window.addEventListener('resize', handleProfileResize);
+    handleProfileResize();
 
     /* Экспортируем toast и refreshAll в window для вызова из модуля */
     window._dash = { toast, refreshAll };
