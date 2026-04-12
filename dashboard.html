@@ -667,6 +667,26 @@
     .toggle input:checked + .toggle-slider::before { transform: translateX(16px); background: var(--accent); }
 
     /* ── ПРОФИЛЬ ─────────────────────────────────────────── */
+    /* ── РЕДАКТОР НОВОСТЕЙ ────────────────────────────────── */
+    .nws-tab.active { color: var(--accent) !important; border-bottom-color: var(--accent) !important; }
+    .nws-status-btn.active { background: var(--accent) !important; color: #0a0a0f !important; }
+    .nws-fmt:hover { background: var(--surface-3) !important; color: var(--text) !important; }
+    .nws-filter-btn { font-size:.62rem; }
+    .nws-filter-btn.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); }
+    #nws-inp-body { font-size:.84rem !important; }
+    #nws-inp-body:focus { border:none !important; outline:none !important; }
+
+    /* Превью текст с базовым Markdown */
+    #nws-prev-body h2 { font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:#fff;margin:16px 0 8px; }
+    #nws-prev-body h3 { font-family:var(--font-display);font-weight:700;font-size:.95rem;color:#fff;margin:12px 0 6px; }
+    #nws-prev-body blockquote { border-left:3px solid var(--accent);padding-left:12px;color:var(--muted-2);font-style:italic; }
+    #nws-prev-body ul { padding-left:18px; }
+    #nws-prev-body a { color:var(--accent);text-decoration:underline; }
+    #nws-prev-body hr { border:none;border-top:1px solid var(--border);margin:14px 0; }
+
+    /* pill жёлтый */
+    .pill-yellow { color:var(--yellow,#d4a843);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25); }
+
     @keyframes pulse-g { 0%,100%{box-shadow:0 0 0 0 rgba(76,175,130,.4)} 50%{box-shadow:0 0 0 5px rgba(76,175,130,0)} }
     @keyframes pulse-r { 0%,100%{box-shadow:0 0 0 0 rgba(208,96,112,.4)} 50%{box-shadow:0 0 0 5px rgba(208,96,112,0)} }
 
@@ -1089,44 +1109,74 @@
          ╚════════════════════════════════ -->
     <div class="page" id="page-news">
       <div class="content-pad">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px">
-          <div><span class="eyebrow">Контент</span><div class="section-title">Новости</div></div>
-          <button class="btn btn-p" id="news-new">
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            Новая статья
-          </button>
+
+        <!-- Шапка -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div>
+            <span class="eyebrow">Контент · Firestore /news</span>
+            <div class="section-title">Новости</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="news-refresh">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M10 6A4 4 0 0 1 2.5 9M2 6a4 4 0 0 1 7.5-3M10.5 3l-.5 3-3-.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Обновить
+            </button>
+            <button class="btn btn-p" id="news-new">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Новая статья
+            </button>
+          </div>
         </div>
+
+        <!-- KPI -->
+        <div class="grid-4" style="margin-bottom:16px">
+          <div class="kpi"><div class="kpi__label">Всего статей</div><div class="kpi__val" id="nws-total">—</div></div>
+          <div class="kpi"><div class="kpi__label">Опубликовано</div><div class="kpi__val green" id="nws-pub">—</div></div>
+          <div class="kpi"><div class="kpi__label">Черновиков</div><div class="kpi__val yellow" id="nws-draft">—</div></div>
+          <div class="kpi"><div class="kpi__label">Последняя публикация</div><div class="kpi__val" id="nws-last" style="font-size:.9rem">—</div></div>
+        </div>
+
+        <!-- Фильтры + поиск -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <div style="position:relative;flex:1;max-width:280px">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted-2);pointer-events:none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.2"/><path d="M9 9l2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <input type="search" id="nws-search" class="search-input" placeholder="Поиск по заголовку…" />
+          </div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-sm nws-filter-btn active" data-filter="all">Все</button>
+            <button class="btn btn-sm nws-filter-btn" data-filter="published">Опубликованные</button>
+            <button class="btn btn-sm nws-filter-btn" data-filter="draft">Черновики</button>
+          </div>
+        </div>
+
+        <!-- Таблица -->
         <div class="table-wrap card">
-          <table>
+          <table id="nws-table">
             <thead><tr>
-              <th><input type="checkbox" class="cb" /></th>
-              <th>Заголовок</th><th>Статус</th><th>Дата</th><th>Автор</th><th></th>
+              <th style="width:36px"><input type="checkbox" class="cb" id="nws-check-all" /></th>
+              <th>Заголовок</th>
+              <th style="width:80px">Тег</th>
+              <th style="width:110px">Статус</th>
+              <th style="width:100px">Дата</th>
+              <th style="width:80px">Автор</th>
+              <th style="width:64px"></th>
             </tr></thead>
             <tbody id="news-tbody">
-              <tr>
-                <td><input type="checkbox" class="cb" /></td>
-                <td>Galelium расширяет портфель в Юго-Восточной Азии</td>
-                <td><span class="pill pill-green"><span class="pill-dot"></span>Опубликовано</span></td>
-                <td class="td-mono">2026-04-01</td><td>Admin</td>
-                <td><div style="display:flex;gap:4px"><button class="icon-btn"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button><button class="icon-btn del"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="cb" /></td>
-                <td>Итоги Q1 2026: ключевые показатели холдинга</td>
-                <td><span class="pill pill-yellow"><span class="pill-dot"></span>Черновик</span></td>
-                <td class="td-mono">2026-03-28</td><td>Admin</td>
-                <td><div style="display:flex;gap:4px"><button class="icon-btn"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button><button class="icon-btn del"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td>
-              </tr>
-              <tr>
-                <td><input type="checkbox" class="cb" /></td>
-                <td>Новый партнёр: SecureVault входит в портфель</td>
-                <td><span class="pill pill-green"><span class="pill-dot"></span>Опубликовано</span></td>
-                <td class="td-mono">2026-03-15</td><td>Admin</td>
-                <td><div style="display:flex;gap:4px"><button class="icon-btn"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button><button class="icon-btn del"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td>
-              </tr>
+              <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted-2)">Загрузка из Firestore…</td></tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Массовые действия (появляются при выборе) -->
+        <div id="nws-bulk-bar" style="display:none;margin-top:10px;display:none;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);padding:10px 16px">
+          <span id="nws-bulk-count" style="font-size:.76rem;color:var(--muted)"></span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-sm" id="nws-bulk-publish">Опубликовать</button>
+            <button class="btn btn-sm" id="nws-bulk-draft">В черновик</button>
+            <button class="btn btn-sm btn-danger" id="nws-bulk-delete">Удалить выбранные</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1615,6 +1665,177 @@
 <!-- Тост -->
 <div class="toast" id="toast"><span class="toast-dot"></span><span id="toast-msg"></span></div>
 
+<!-- ══ ДРОВЕР РЕДАКТОРА НОВОСТЕЙ ════════════════════════════ -->
+<div class="drawer-overlay" id="nws-overlay"></div>
+<div class="drawer" id="nws-drawer" style="width:min(640px,100vw)">
+  <div class="drawer-head">
+    <div class="drawer-head-text">
+      <div class="drawer-head-title" id="nws-dr-title">Новая статья</div>
+      <div class="drawer-head-sub" id="nws-dr-sub">Firestore /news</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <!-- Статус переключатель -->
+      <div style="display:flex;gap:0;border:1px solid var(--border);overflow:hidden">
+        <button class="nws-status-btn active" data-status="published" id="nws-btn-pub" style="padding:5px 12px;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;background:none;border:none;cursor:pointer;color:var(--muted);transition:background var(--tf),color var(--tf)">Опубликовать</button>
+        <div style="width:1px;background:var(--border)"></div>
+        <button class="nws-status-btn" data-status="draft" id="nws-btn-draft" style="padding:5px 12px;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;background:none;border:none;cursor:pointer;color:var(--muted);transition:background var(--tf),color var(--tf)">Черновик</button>
+      </div>
+      <button class="drawer-close" id="nws-dr-close">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="drawer-body" id="nws-dr-body" style="padding:0;overflow-y:auto">
+
+    <!-- Вкладки Редактор / Превью -->
+    <div style="display:flex;border-bottom:1px solid var(--border);background:var(--surface)">
+      <button class="nws-tab active" data-tab="edit" style="padding:10px 18px;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);transition:color var(--tf),border-color var(--tf)">Редактор</button>
+      <button class="nws-tab" data-tab="preview" style="padding:10px 18px;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);transition:color var(--tf),border-color var(--tf)">Превью</button>
+    </div>
+
+    <!-- Панель редактора -->
+    <div id="nws-pane-edit" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+
+      <!-- Заголовок -->
+      <div class="field">
+        <label>Заголовок <span style="color:var(--accent)">*</span></label>
+        <input type="text" id="nws-inp-title" placeholder="Заголовок статьи…" style="font-size:.95rem" />
+      </div>
+
+      <!-- Тег + Дата -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field">
+          <label>Тег / категория</label>
+          <div style="position:relative">
+            <input type="text" id="nws-inp-tag" placeholder="Аналитика" list="nws-tag-list" />
+            <datalist id="nws-tag-list">
+              <option value="Аналитика">
+              <option value="Новость">
+              <option value="Партнёрство">
+              <option value="Инвестиции">
+              <option value="Отчёт">
+              <option value="Команда">
+              <option value="События">
+            </datalist>
+          </div>
+        </div>
+        <div class="field">
+          <label>Дата публикации</label>
+          <input type="date" id="nws-inp-date" />
+        </div>
+      </div>
+
+      <!-- Краткое описание -->
+      <div class="field">
+        <label>Краткое описание <span style="color:var(--muted-2);font-size:.65rem;font-weight:300;letter-spacing:0;text-transform:none">(для карточек на сайте)</span></label>
+        <textarea id="nws-inp-summary" placeholder="1–2 предложения о статье…" style="min-height:72px;resize:vertical"></textarea>
+        <div style="font-size:.62rem;color:var(--muted-2);margin-top:3px">
+          <span id="nws-summary-count">0</span> / 160 символов
+        </div>
+      </div>
+
+      <!-- Toolbar форматирования -->
+      <div class="field">
+        <label>Полный текст <span style="color:var(--muted-2);font-size:.65rem;font-weight:300;letter-spacing:0;text-transform:none">(поддерживает Markdown)</span></label>
+        <div style="border:1px solid var(--border);background:var(--surface-2)">
+          <!-- Toolbar -->
+          <div style="display:flex;gap:1px;padding:6px 8px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface)">
+            <button class="nws-fmt" data-cmd="bold" title="Жирный (Ctrl+B)" style="padding:4px 8px;font-size:.72rem;font-weight:700;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">B</button>
+            <button class="nws-fmt" data-cmd="italic" title="Курсив (Ctrl+I)" style="padding:4px 8px;font-size:.72rem;font-style:italic;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">I</button>
+            <div style="width:1px;background:var(--border);margin:2px 4px"></div>
+            <button class="nws-fmt" data-cmd="h2" title="Заголовок H2" style="padding:4px 8px;font-size:.7rem;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">H2</button>
+            <button class="nws-fmt" data-cmd="h3" title="Заголовок H3" style="padding:4px 8px;font-size:.7rem;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">H3</button>
+            <div style="width:1px;background:var(--border);margin:2px 4px"></div>
+            <button class="nws-fmt" data-cmd="ul" title="Список" style="padding:4px 8px;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 3h7M4 6h7M4 9h7M1.5 3h.01M1.5 6h.01M1.5 9h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </button>
+            <button class="nws-fmt" data-cmd="quote" title="Цитата" style="padding:4px 8px;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h4v3.5H3a1.5 1.5 0 0 1 0-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 3h4v3.5H8.5a1.5 1.5 0 0 1 0-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="nws-fmt" data-cmd="link" title="Ссылка" style="padding:4px 8px;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4.5 6.5a3.5 3.5 0 0 0 4.95 0l1.06-1.06a3.5 3.5 0 0 0-4.95-4.95L4.5 1.55" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M7.5 5.5a3.5 3.5 0 0 0-4.95 0L1.49 6.56a3.5 3.5 0 0 0 4.95 4.95l1.06-1.06" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </button>
+            <div style="width:1px;background:var(--border);margin:2px 4px"></div>
+            <button class="nws-fmt" data-cmd="hr" title="Разделитель" style="padding:4px 8px;font-size:.7rem;background:none;border:none;cursor:pointer;color:var(--muted);border-radius:2px;transition:background var(--tf),color var(--tf)">—</button>
+            <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+              <span style="font-size:.58rem;color:var(--muted-2)" id="nws-body-count">0 симв.</span>
+            </div>
+          </div>
+          <!-- Текстовое поле -->
+          <textarea id="nws-inp-body" placeholder="Полный текст статьи…&#10;&#10;Поддерживаются Markdown-заголовки ## и ###, **жирный**, *курсив*, > цитаты, - списки." style="width:100%;min-height:240px;resize:vertical;background:var(--surface-2);border:none;color:var(--text);font-size:.86rem;padding:14px 14px;font-family:var(--font-mono,monospace);line-height:1.7;outline:none"></textarea>
+        </div>
+      </div>
+
+      <!-- Доп. поля -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field">
+          <label>Автор</label>
+          <input type="text" id="nws-inp-author" placeholder="Admin" />
+        </div>
+        <div class="field">
+          <label>URL изображения</label>
+          <input type="url" id="nws-inp-image" placeholder="https://…" />
+        </div>
+      </div>
+
+      <!-- SEO блок -->
+      <div style="background:var(--surface);border:1px solid var(--border);padding:14px">
+        <div style="font-size:.57rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          SEO
+          <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="field"><label>Meta Description</label><textarea id="nws-inp-meta" placeholder="Краткое SEO-описание для поисковиков…" style="min-height:54px;resize:vertical"></textarea></div>
+          <div class="field"><label>Slug (URL)</label><input type="text" id="nws-inp-slug" placeholder="galelium-rasshiryaet-portfel" /></div>
+        </div>
+      </div>
+
+    </div><!-- /pane-edit -->
+
+    <!-- Панель превью -->
+    <div id="nws-pane-preview" style="display:none;padding:24px">
+      <div id="nws-preview-card" style="background:var(--surface);border:1px solid var(--border);padding:0;overflow:hidden;margin-bottom:16px">
+        <!-- Превью карточки сайта -->
+        <div id="nws-prev-img" style="display:none;height:160px;background:var(--surface-2);overflow:hidden">
+          <img id="nws-prev-img-el" style="width:100%;height:100%;object-fit:cover" alt="" />
+        </div>
+        <div style="padding:18px 20px">
+          <div id="nws-prev-tag" style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Тег</div>
+          <div id="nws-prev-title" style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:#fff;line-height:1.2;margin-bottom:8px">Заголовок статьи</div>
+          <div id="nws-prev-summary" style="font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:14px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+            <span id="nws-prev-date" style="font-size:.66rem;color:var(--muted-2)"></span>
+            <span id="nws-prev-author" style="font-size:.66rem;color:var(--muted-2)"></span>
+          </div>
+        </div>
+      </div>
+      <!-- Превью текста -->
+      <div style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);margin-bottom:10px">Текст статьи</div>
+      <div id="nws-prev-body" style="font-size:.86rem;color:var(--muted);line-height:1.8;background:var(--surface);border:1px solid var(--border);padding:18px 20px;white-space:pre-wrap;word-break:break-word"></div>
+    </div><!-- /pane-preview -->
+
+  </div><!-- /drawer-body -->
+
+  <!-- Подвал дровера -->
+  <div class="drawer-foot" style="justify-content:space-between">
+    <div style="display:flex;gap:6px">
+      <button class="btn" id="nws-dr-cancel">Отменить</button>
+      <button class="btn btn-sm btn-danger" id="nws-dr-delete" style="display:none">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Удалить
+      </button>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn" id="nws-dr-save-draft">Сохранить черновик</button>
+      <button class="btn btn-p" id="nws-dr-save">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="nws-save-label">Опубликовать</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ДРОВЕР ПРОФИЛЯ СБОРЩИКА ══════════════════════════════ -->
 <div class="drawer-overlay" id="wk-drawer-overlay"></div>
 <div class="drawer" id="wk-drawer">
@@ -1657,7 +1878,7 @@
     from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js';
   import {
     getFirestore, collection, doc, getDocs, getDoc,
-    query, orderBy, where, updateDoc, deleteDoc, serverTimestamp
+    query, orderBy, where, updateDoc, deleteDoc, addDoc, serverTimestamp
   } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
   /* ── КОНФИГ ─────────────────────────────────────────────── */
@@ -2332,6 +2553,7 @@
       /* При открытии Workers-страниц — загружаем из Firestore */
       if (pageId === 'workers')        loadWorkers();
       if (pageId === 'worker-reports') loadAllWorkerReports();
+      if (pageId === 'news')           loadNews();
     }
 
     function updateProfileStats() {
@@ -3094,6 +3316,454 @@
     }
     tick();
     setInterval(tick, 1000);
+
+    /* ══════════════════════════════════════════════════════════
+       НОВОСТИ — Firestore /news
+    ══════════════════════════════════════════════════════════ */
+    let newsItems   = [];  /* кэш из Firestore */
+    let newsFilter  = 'all';
+    let newsSearch  = '';
+    let newsEditId  = null; /* null = новая, string = edit */
+    let newsStatus  = 'published';
+
+    const MONTHS_SH = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+    function fmtNewsDate(s) {
+      if (!s) return '—';
+      const d = new Date(s + 'T00:00:00');
+      return d.getDate() + ' ' + MONTHS_SH[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    /* ── Загрузка из Firestore ── */
+    async function loadNews() {
+      const tbody = document.getElementById('news-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted-2)">Загрузка…</td></tr>';
+      try {
+        const snap = await getDocs(query(collection(fdb, 'news'), orderBy('date', 'desc')));
+        newsItems = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+        renderNewsTable();
+        updateNewsBadge();
+      } catch(e) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Ошибка: ' + esc(e.message) + '</td></tr>';
+      }
+    }
+
+    function updateNewsBadge() {
+      const total = newsItems.length;
+      const pub   = newsItems.filter(n => n.status === 'published').length;
+      const draft = newsItems.filter(n => n.status === 'draft').length;
+      const last  = newsItems.find(n => n.status === 'published');
+      setText('nws-total', total);
+      setText('nws-pub',   pub);
+      setText('nws-draft', draft);
+      setText('nws-last',  last ? fmtNewsDate(last.date) : '—');
+      /* Бейдж в sidebar */
+      const badge = document.getElementById('sb-badge-news');
+      if (badge) { badge.textContent = draft; badge.className = 'sb-badge' + (draft ? ' yellow' : ''); }
+    }
+
+    /* ── Рендер таблицы ── */
+    function renderNewsTable() {
+      const tbody = document.getElementById('news-tbody');
+      if (!tbody) return;
+      let list = newsItems.slice();
+      if (newsFilter === 'published') list = list.filter(n => n.status === 'published');
+      if (newsFilter === 'draft')     list = list.filter(n => n.status !== 'published');
+      if (newsSearch) list = list.filter(n => (n.title||'').toLowerCase().includes(newsSearch.toLowerCase()));
+
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted-2)">Нет статей</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(n => {
+        const isPub = n.status === 'published';
+        const pill  = isPub
+          ? '<span class="pill pill-green"><span class="pill-dot"></span>Опубликовано</span>'
+          : '<span class="pill pill-yellow"><span class="pill-dot"></span>Черновик</span>';
+        return '<tr data-nws-id="' + esc(n._id) + '" style="cursor:pointer">' +
+          '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb nws-check" data-id="' + esc(n._id) + '" /></td>' +
+          '<td><div style="font-size:.84rem;color:var(--text);font-weight:400">' + esc(n.title||'(без заголовка)') + '</div>' +
+            (n.summary ? '<div style="font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">' + esc(n.summary.slice(0,80)) + '</div>' : '') +
+          '</td>' +
+          '<td>' + (n.tag ? '<span class="pill pill-muted">' + esc(n.tag) + '</span>' : '<span style="color:var(--muted-2);font-size:.72rem">—</span>') + '</td>' +
+          '<td>' + pill + '</td>' +
+          '<td class="td-mono" style="font-size:.72rem">' + esc(n.date||'—') + '</td>' +
+          '<td style="font-size:.72rem;color:var(--muted)">' + esc(n.author||'—') + '</td>' +
+          '<td><div style="display:flex;gap:4px">' +
+            '<button class="icon-btn nws-edit-btn" data-id="' + esc(n._id) + '" title="Редактировать"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>' +
+            '<button class="icon-btn del nws-toggle-btn" data-id="' + esc(n._id) + '" data-pub="' + isPub + '" title="' + (isPub ? 'В черновик' : 'Опубликовать') + '">' +
+              (isPub
+                ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l2.5 2.5 5.5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/></svg>') +
+            '</button>' +
+            '<button class="icon-btn del nws-del-btn" data-id="' + esc(n._id) + '" title="Удалить"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+
+      /* Клики по строкам */
+      tbody.querySelectorAll('tr[data-nws-id]').forEach(row => {
+        row.addEventListener('click', e => {
+          if (e.target.closest('button') || e.target.closest('input')) return;
+          openNewsDrawer(row.dataset.nwsId);
+        });
+      });
+
+      /* Кнопка редактировать */
+      tbody.querySelectorAll('.nws-edit-btn').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); openNewsDrawer(btn.dataset.id); });
+      });
+
+      /* Быстрый переключатель статуса */
+      tbody.querySelectorAll('.nws-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const newStatus = btn.dataset.pub === 'true' ? 'draft' : 'published';
+          try {
+            await updateDoc(doc(fdb, 'news', btn.dataset.id), { status: newStatus, updatedAt: serverTimestamp() });
+            const idx = newsItems.findIndex(n => n._id === btn.dataset.id);
+            if (idx >= 0) newsItems[idx].status = newStatus;
+            renderNewsTable(); updateNewsBadge();
+            toast(newStatus === 'published' ? 'Опубликовано ✓' : 'Переведено в черновик', 'ok');
+          } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
+        });
+      });
+
+      /* Удаление */
+      tbody.querySelectorAll('.nws-del-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          e.stopPropagation();
+          const n = newsItems.find(x => x._id === btn.dataset.id);
+          if (!confirm('Удалить «' + (n?.title||'статью') + '»?')) return;
+          try {
+            await deleteDoc(doc(fdb, 'news', btn.dataset.id));
+            newsItems = newsItems.filter(x => x._id !== btn.dataset.id);
+            renderNewsTable(); updateNewsBadge();
+            toast('Статья удалена', 'err');
+          } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
+        });
+      });
+
+      /* Чекбоксы */
+      bindNewsCheckboxes();
+    }
+
+    /* ── Чекбоксы и массовые действия ── */
+    function bindNewsCheckboxes() {
+      const checkAll = document.getElementById('nws-check-all');
+      const bulkBar  = document.getElementById('nws-bulk-bar');
+      const bulkCount= document.getElementById('nws-bulk-count');
+
+      function updateBulk() {
+        const checked = document.querySelectorAll('.nws-check:checked');
+        if (bulkBar) bulkBar.style.display = checked.length ? 'flex' : 'none';
+        if (bulkCount) bulkCount.textContent = 'Выбрано: ' + checked.length;
+      }
+
+      document.querySelectorAll('.nws-check').forEach(cb => {
+        cb.addEventListener('change', updateBulk);
+      });
+      if (checkAll) {
+        checkAll.addEventListener('change', () => {
+          document.querySelectorAll('.nws-check').forEach(cb => { cb.checked = checkAll.checked; });
+          updateBulk();
+        });
+      }
+    }
+
+    /* Массовые действия */
+    function getCheckedIds() {
+      return [...document.querySelectorAll('.nws-check:checked')].map(cb => cb.dataset.id);
+    }
+
+    const nwsBulkPub = document.getElementById('nws-bulk-publish');
+    const nwsBulkDraft = document.getElementById('nws-bulk-draft');
+    const nwsBulkDel = document.getElementById('nws-bulk-delete');
+
+    if (nwsBulkPub) nwsBulkPub.addEventListener('click', async () => {
+      const ids = getCheckedIds();
+      if (!ids.length) return;
+      await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'published', updatedAt:serverTimestamp() })));
+      ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='published'; });
+      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей опубликовано', 'ok');
+    });
+    if (nwsBulkDraft) nwsBulkDraft.addEventListener('click', async () => {
+      const ids = getCheckedIds();
+      if (!ids.length) return;
+      await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'draft', updatedAt:serverTimestamp() })));
+      ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='draft'; });
+      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей → черновик', 'ok');
+    });
+    if (nwsBulkDel) nwsBulkDel.addEventListener('click', async () => {
+      const ids = getCheckedIds();
+      if (!ids.length || !confirm('Удалить ' + ids.length + ' статей?')) return;
+      await Promise.all(ids.map(id => deleteDoc(doc(fdb,'news',id))));
+      newsItems = newsItems.filter(n => !ids.includes(n._id));
+      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей удалено', 'err');
+    });
+
+    /* ── Фильтры и поиск ── */
+    document.querySelectorAll('.nws-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nws-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        newsFilter = btn.dataset.filter;
+        renderNewsTable();
+      });
+    });
+    const nwsSearchEl = document.getElementById('nws-search');
+    if (nwsSearchEl) nwsSearchEl.addEventListener('input', function() { newsSearch = this.value; renderNewsTable(); });
+    const nwsRefresh = document.getElementById('news-refresh');
+    if (nwsRefresh) nwsRefresh.addEventListener('click', loadNews);
+
+    /* ── Открытие дровера ── */
+    const nwsOverlay = document.getElementById('nws-overlay');
+    const nwsDrawer  = document.getElementById('nws-drawer');
+
+    function openNewsDrawer(id) {
+      newsEditId = id || null;
+      const n = id ? newsItems.find(x => x._id === id) : null;
+
+      /* Заполняем поля */
+      document.getElementById('nws-inp-title').value   = n?.title   || '';
+      document.getElementById('nws-inp-tag').value     = n?.tag     || '';
+      document.getElementById('nws-inp-date').value    = n?.date    || new Date().toISOString().slice(0,10);
+      document.getElementById('nws-inp-summary').value = n?.summary || '';
+      document.getElementById('nws-inp-body').value    = n?.body    || '';
+      document.getElementById('nws-inp-author').value  = n?.author  || (currentUser?.displayName || '');
+      document.getElementById('nws-inp-image').value   = n?.image   || '';
+      document.getElementById('nws-inp-meta').value    = n?.metaDesc|| '';
+      document.getElementById('nws-inp-slug').value    = n?.slug    || '';
+
+      /* Статус */
+      newsStatus = n?.status || 'published';
+      setNewsStatus(newsStatus);
+
+      /* Заголовок дровера */
+      setText('nws-dr-title', id ? 'Редактировать статью' : 'Новая статья');
+      setText('nws-save-label', newsStatus === 'published' ? 'Сохранить' : 'Опубликовать');
+
+      /* Кнопка удаления */
+      const delBtn = document.getElementById('nws-dr-delete');
+      if (delBtn) delBtn.style.display = id ? '' : 'none';
+
+      /* Счётчики */
+      updateNewsCounts();
+
+      /* Переключаемся на таб редактора */
+      switchNewsTab('edit');
+
+      nwsOverlay.classList.add('open');
+      nwsDrawer.classList.add('open');
+    }
+
+    function closeNewsDrawer() {
+      nwsOverlay.classList.remove('open');
+      nwsDrawer.classList.remove('open');
+      newsEditId = null;
+    }
+
+    nwsOverlay.addEventListener('click', closeNewsDrawer);
+    document.getElementById('nws-dr-cancel').addEventListener('click', closeNewsDrawer);
+    document.getElementById('nws-dr-close').addEventListener('click', closeNewsDrawer);
+    document.getElementById('news-new').addEventListener('click', () => openNewsDrawer(null));
+
+    /* ── Переключение статуса ── */
+    function setNewsStatus(status) {
+      newsStatus = status;
+      document.querySelectorAll('.nws-status-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.status === status);
+      });
+      const lbl = document.getElementById('nws-save-label');
+      if (lbl) lbl.textContent = status === 'published' ? 'Опубликовать' : 'Сохранить черновик';
+    }
+
+    document.querySelectorAll('.nws-status-btn').forEach(btn => {
+      btn.addEventListener('click', () => setNewsStatus(btn.dataset.status));
+    });
+
+    /* ── Переключение вкладок ── */
+    function switchNewsTab(tab) {
+      document.querySelectorAll('.nws-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      document.getElementById('nws-pane-edit').style.display    = tab === 'edit'    ? '' : 'none';
+      document.getElementById('nws-pane-preview').style.display = tab === 'preview' ? '' : 'none';
+      if (tab === 'preview') updateNewsPreview();
+    }
+
+    document.querySelectorAll('.nws-tab').forEach(t => {
+      t.addEventListener('click', () => switchNewsTab(t.dataset.tab));
+    });
+
+    /* ── Счётчики символов ── */
+    function updateNewsCounts() {
+      const summary = document.getElementById('nws-inp-summary')?.value || '';
+      const body    = document.getElementById('nws-inp-body')?.value    || '';
+      const sc = document.getElementById('nws-summary-count');
+      const bc = document.getElementById('nws-body-count');
+      if (sc) { sc.textContent = summary.length; sc.style.color = summary.length > 160 ? 'var(--red)' : ''; }
+      if (bc) bc.textContent = body.length + ' симв.';
+    }
+
+    document.getElementById('nws-inp-summary')?.addEventListener('input', updateNewsCounts);
+    document.getElementById('nws-inp-body')?.addEventListener('input', updateNewsCounts);
+
+    /* Auto-slug из заголовка */
+    document.getElementById('nws-inp-title')?.addEventListener('input', function() {
+      const slugEl = document.getElementById('nws-inp-slug');
+      if (slugEl && !slugEl._manualEdit) {
+        slugEl.value = this.value
+          .toLowerCase()
+          .replace(/[а-яё]/g, c => ({'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'}[c]||c))
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+      }
+      updateNewsPreview();
+    });
+    document.getElementById('nws-inp-slug')?.addEventListener('input', function() { this._manualEdit = true; });
+
+    /* Превью при вводе */
+    ['nws-inp-title','nws-inp-tag','nws-inp-summary','nws-inp-body','nws-inp-date','nws-inp-author','nws-inp-image'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        if (document.getElementById('nws-pane-preview')?.style.display !== 'none') updateNewsPreview();
+      });
+    });
+
+    /* ── Toolbar форматирования ── */
+    document.querySelectorAll('.nws-fmt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const ta = document.getElementById('nws-inp-body');
+        if (!ta) return;
+        const start = ta.selectionStart;
+        const end   = ta.selectionEnd;
+        const sel   = ta.value.slice(start, end);
+        const cmd   = btn.dataset.cmd;
+        let insert  = '';
+
+        if (cmd === 'bold')   insert = '**' + (sel||'текст') + '**';
+        if (cmd === 'italic') insert = '*' + (sel||'текст') + '*';
+        if (cmd === 'h2')     insert = '\n## ' + (sel||'Заголовок') + '\n';
+        if (cmd === 'h3')     insert = '\n### ' + (sel||'Заголовок') + '\n';
+        if (cmd === 'ul')     insert = '\n- ' + (sel||'Пункт списка') + '\n';
+        if (cmd === 'quote')  insert = '\n> ' + (sel||'Цитата') + '\n';
+        if (cmd === 'hr')     insert = '\n---\n';
+        if (cmd === 'link')   insert = '[' + (sel||'текст') + '](https://...)';
+
+        ta.value = ta.value.slice(0, start) + insert + ta.value.slice(end);
+        ta.focus();
+        const newPos = start + insert.length;
+        ta.setSelectionRange(newPos, newPos);
+        updateNewsCounts();
+      });
+    });
+
+    /* ── Превью ── */
+    function markdownToHtml(md) {
+      return md
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        .replace(/^---$/gm, '<hr>')
+        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    }
+
+    function updateNewsPreview() {
+      const title   = document.getElementById('nws-inp-title')?.value    || '';
+      const tag     = document.getElementById('nws-inp-tag')?.value      || '';
+      const summary = document.getElementById('nws-inp-summary')?.value  || '';
+      const body    = document.getElementById('nws-inp-body')?.value     || '';
+      const date    = document.getElementById('nws-inp-date')?.value     || '';
+      const author  = document.getElementById('nws-inp-author')?.value   || '';
+      const image   = document.getElementById('nws-inp-image')?.value    || '';
+
+      const el = id => document.getElementById(id);
+      if (el('nws-prev-title'))   el('nws-prev-title').textContent  = title  || '(без заголовка)';
+      if (el('nws-prev-tag'))     el('nws-prev-tag').textContent    = tag    || 'Тег';
+      if (el('nws-prev-summary')) el('nws-prev-summary').textContent= summary;
+      if (el('nws-prev-date'))    el('nws-prev-date').textContent   = fmtNewsDate(date);
+      if (el('nws-prev-author'))  el('nws-prev-author').textContent = author ? 'Автор: ' + author : '';
+      if (el('nws-prev-body'))    el('nws-prev-body').innerHTML     = body ? markdownToHtml(body) : '<span style="color:var(--muted-2);font-size:.8rem">Текст статьи пуст</span>';
+
+      const imgWrap = el('nws-prev-img');
+      const imgEl   = el('nws-prev-img-el');
+      if (imgWrap && imgEl) {
+        if (image) { imgEl.src = image; imgWrap.style.display = ''; }
+        else { imgWrap.style.display = 'none'; }
+      }
+    }
+
+    /* ── Сохранение в Firestore ── */
+    async function saveNewsToFirestore(status) {
+      const title = document.getElementById('nws-inp-title')?.value.trim();
+      if (!title) { toast('Введите заголовок', 'err'); return; }
+
+      const btn = document.getElementById('nws-dr-save');
+      if (btn) { btn.disabled = true; }
+
+      const data = {
+        title,
+        tag:      document.getElementById('nws-inp-tag')?.value.trim()     || '',
+        date:     document.getElementById('nws-inp-date')?.value           || new Date().toISOString().slice(0,10),
+        summary:  document.getElementById('nws-inp-summary')?.value.trim() || '',
+        body:     document.getElementById('nws-inp-body')?.value           || '',
+        author:   document.getElementById('nws-inp-author')?.value.trim()  || '',
+        image:    document.getElementById('nws-inp-image')?.value.trim()   || '',
+        metaDesc: document.getElementById('nws-inp-meta')?.value.trim()    || '',
+        slug:     document.getElementById('nws-inp-slug')?.value.trim()    || '',
+        status,
+        updatedAt: serverTimestamp(),
+      };
+
+      /* Убираем пустые строки */
+      Object.keys(data).forEach(k => { if (data[k] === '' && k !== 'updatedAt') delete data[k]; });
+
+      try {
+        if (newsEditId) {
+          await updateDoc(doc(fdb, 'news', newsEditId), data);
+          const idx = newsItems.findIndex(n => n._id === newsEditId);
+          if (idx >= 0) newsItems[idx] = { ...newsItems[idx], ...data };
+          toast('Статья обновлена ✓', 'ok');
+        } else {
+          data.createdAt = serverTimestamp();
+          const ref = await addDoc(collection(fdb, 'news'), data);
+          newsItems.unshift({ _id: ref.id, ...data });
+          toast('Статья создана ✓', 'ok');
+        }
+        renderNewsTable(); updateNewsBadge();
+        closeNewsDrawer();
+      } catch(e) {
+        toast('Ошибка: ' + e.message, 'err');
+      } finally {
+        if (btn) { btn.disabled = false; }
+      }
+    }
+
+    document.getElementById('nws-dr-save')?.addEventListener('click', () => saveNewsToFirestore(newsStatus));
+    document.getElementById('nws-dr-save-draft')?.addEventListener('click', () => saveNewsToFirestore('draft'));
+
+    /* Удаление из дровера */
+    document.getElementById('nws-dr-delete')?.addEventListener('click', async () => {
+      if (!newsEditId) return;
+      const n = newsItems.find(x => x._id === newsEditId);
+      if (!confirm('Удалить «' + (n?.title||'статью') + '»? Действие необратимо.')) return;
+      try {
+        await deleteDoc(doc(fdb, 'news', newsEditId));
+        newsItems = newsItems.filter(x => x._id !== newsEditId);
+        renderNewsTable(); updateNewsBadge();
+        closeNewsDrawer();
+        toast('Статья удалена', 'err');
+      } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
+    });
+
+    /* Загружаем новости при первом открытии вкладки */
+    const origNavigate = navigate;
 
     window._dash = { toast, refreshAll };
 
