@@ -1897,6 +1897,7 @@
   const auth = getAuth(app);
   const db   = getDatabase(app);
   const fdb  = getFirestore(app);   /* Firestore для сборщиков */
+  let currentUser = null; /* текущий пользователь — обновляется в onAuthStateChanged */
 
   /* ── AUTH GUARD: если не залогинен → login.html ─────────── */
   const authLoader = document.getElementById('auth-loader');
@@ -1932,6 +1933,7 @@
 
     authLoader.style.display = 'none';
     shellEl.classList.add('active');
+    currentUser = user; /* сохраняем в module-scope для блока новостей */
 
     /* Заполняем sidebar */
     const displayName = user.displayName || user.email || 'Администратор';
@@ -3329,467 +3331,477 @@
     tick();
     setInterval(tick, 1000);
 
-    /* ══════════════════════════════════════════════════════════
-       НОВОСТИ — Firestore /news
-    ══════════════════════════════════════════════════════════ */
-    let newsItems   = [];  /* кэш из Firestore */
-    let newsFilter  = 'all';
-    let newsSearch  = '';
-    let newsEditId  = null; /* null = новая, string = edit */
-    let newsStatus  = 'published';
-
-    const MONTHS_SH = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-
-    function fmtNewsDate(s) {
-      if (!s) return '—';
-      const d = new Date(s + 'T00:00:00');
-      return d.getDate() + ' ' + MONTHS_SH[d.getMonth()] + ' ' + d.getFullYear();
-    }
-
-    /* ── Загрузка из Firestore ── */
-    async function loadNews() {
-      const tbody = document.getElementById('news-tbody');
-      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted-2)">Загрузка…</td></tr>';
-      try {
-        const snap = await getDocs(query(collection(fdb, 'news'), orderBy('date', 'desc')));
-        newsItems = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-        renderNewsTable();
-        updateNewsBadge();
-      } catch(e) {
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Ошибка: ' + esc(e.message) + '</td></tr>';
-      }
-    }
-
-    function updateNewsBadge() {
-      const total = newsItems.length;
-      const pub   = newsItems.filter(n => n.status === 'published').length;
-      const draft = newsItems.filter(n => n.status === 'draft').length;
-      const last  = newsItems.find(n => n.status === 'published');
-      setText('nws-total', total);
-      setText('nws-pub',   pub);
-      setText('nws-draft', draft);
-      setText('nws-last',  last ? fmtNewsDate(last.date) : '—');
-      /* Бейдж в sidebar */
-      const badge = document.getElementById('sb-badge-news');
-      if (badge) { badge.textContent = draft; badge.className = 'sb-badge' + (draft ? ' yellow' : ''); }
-    }
-
-    /* ── Рендер таблицы ── */
-    function renderNewsTable() {
-      const tbody = document.getElementById('news-tbody');
-      if (!tbody) return;
-      let list = newsItems.slice();
-      if (newsFilter === 'published') list = list.filter(n => n.status === 'published');
-      if (newsFilter === 'draft')     list = list.filter(n => n.status !== 'published');
-      if (newsSearch) list = list.filter(n => (n.title||'').toLowerCase().includes(newsSearch.toLowerCase()));
-
-      if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted-2)">Нет статей</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = list.map(n => {
-        const isPub = n.status === 'published';
-        const pill  = isPub
-          ? '<span class="pill pill-green"><span class="pill-dot"></span>Опубликовано</span>'
-          : '<span class="pill pill-yellow"><span class="pill-dot"></span>Черновик</span>';
-        return '<tr data-nws-id="' + esc(n._id) + '" style="cursor:pointer">' +
-          '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb nws-check" data-id="' + esc(n._id) + '" /></td>' +
-          '<td><div style="font-size:.84rem;color:var(--text);font-weight:400">' + esc(n.title||'(без заголовка)') + '</div>' +
-            (n.summary ? '<div style="font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">' + esc(n.summary.slice(0,80)) + '</div>' : '') +
-          '</td>' +
-          '<td>' + (n.tag ? '<span class="pill pill-muted">' + esc(n.tag) + '</span>' : '<span style="color:var(--muted-2);font-size:.72rem">—</span>') + '</td>' +
-          '<td>' + pill + '</td>' +
-          '<td class="td-mono" style="font-size:.72rem">' + esc(n.date||'—') + '</td>' +
-          '<td style="font-size:.72rem;color:var(--muted)">' + esc(n.author||'—') + '</td>' +
-          '<td><div style="display:flex;gap:4px">' +
-            '<button class="icon-btn nws-edit-btn" data-id="' + esc(n._id) + '" title="Редактировать"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>' +
-            '<button class="icon-btn del nws-toggle-btn" data-id="' + esc(n._id) + '" data-pub="' + isPub + '" title="' + (isPub ? 'В черновик' : 'Опубликовать') + '">' +
-              (isPub
-                ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l2.5 2.5 5.5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                : '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/></svg>') +
-            '</button>' +
-            '<button class="icon-btn del nws-del-btn" data-id="' + esc(n._id) + '" title="Удалить"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
-          '</div></td>' +
-        '</tr>';
-      }).join('');
-
-      /* Клики по строкам */
-      tbody.querySelectorAll('tr[data-nws-id]').forEach(row => {
-        row.addEventListener('click', e => {
-          if (e.target.closest('button') || e.target.closest('input')) return;
-          openNewsDrawer(row.dataset.nwsId);
-        });
-      });
-
-      /* Кнопка редактировать */
-      tbody.querySelectorAll('.nws-edit-btn').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); openNewsDrawer(btn.dataset.id); });
-      });
-
-      /* Быстрый переключатель статуса */
-      tbody.querySelectorAll('.nws-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', async e => {
-          e.stopPropagation();
-          const newStatus = btn.dataset.pub === 'true' ? 'draft' : 'published';
-          try {
-            await updateDoc(doc(fdb, 'news', btn.dataset.id), { status: newStatus, updatedAt: serverTimestamp() });
-            const idx = newsItems.findIndex(n => n._id === btn.dataset.id);
-            if (idx >= 0) newsItems[idx].status = newStatus;
-            renderNewsTable(); updateNewsBadge();
-            toast(newStatus === 'published' ? 'Опубликовано ✓' : 'Переведено в черновик', 'ok');
-          } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
-        });
-      });
-
-      /* Удаление */
-      tbody.querySelectorAll('.nws-del-btn').forEach(btn => {
-        btn.addEventListener('click', async e => {
-          e.stopPropagation();
-          const n = newsItems.find(x => x._id === btn.dataset.id);
-          if (!confirm('Удалить «' + (n?.title||'статью') + '»?')) return;
-          try {
-            await deleteDoc(doc(fdb, 'news', btn.dataset.id));
-            newsItems = newsItems.filter(x => x._id !== btn.dataset.id);
-            renderNewsTable(); updateNewsBadge();
-            toast('Статья удалена', 'err');
-          } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
-        });
-      });
-
-      /* Чекбоксы */
-      bindNewsCheckboxes();
-    }
-
-    /* ── Чекбоксы и массовые действия ── */
-    function bindNewsCheckboxes() {
-      const checkAll = document.getElementById('nws-check-all');
-      const bulkBar  = document.getElementById('nws-bulk-bar');
-      const bulkCount= document.getElementById('nws-bulk-count');
-
-      function updateBulk() {
-        const checked = document.querySelectorAll('.nws-check:checked');
-        if (bulkBar) bulkBar.style.display = checked.length ? 'flex' : 'none';
-        if (bulkCount) bulkCount.textContent = 'Выбрано: ' + checked.length;
-      }
-
-      document.querySelectorAll('.nws-check').forEach(cb => {
-        cb.addEventListener('change', updateBulk);
-      });
-      if (checkAll) {
-        checkAll.addEventListener('change', () => {
-          document.querySelectorAll('.nws-check').forEach(cb => { cb.checked = checkAll.checked; });
-          updateBulk();
-        });
-      }
-    }
-
-    /* Массовые действия */
-    function getCheckedIds() {
-      return [...document.querySelectorAll('.nws-check:checked')].map(cb => cb.dataset.id);
-    }
-
-    const nwsBulkPub = document.getElementById('nws-bulk-publish');
-    const nwsBulkDraft = document.getElementById('nws-bulk-draft');
-    const nwsBulkDel = document.getElementById('nws-bulk-delete');
-
-    if (nwsBulkPub) nwsBulkPub.addEventListener('click', async () => {
-      const ids = getCheckedIds();
-      if (!ids.length) return;
-      await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'published', updatedAt:serverTimestamp() })));
-      ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='published'; });
-      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей опубликовано', 'ok');
-    });
-    if (nwsBulkDraft) nwsBulkDraft.addEventListener('click', async () => {
-      const ids = getCheckedIds();
-      if (!ids.length) return;
-      await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'draft', updatedAt:serverTimestamp() })));
-      ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='draft'; });
-      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей → черновик', 'ok');
-    });
-    if (nwsBulkDel) nwsBulkDel.addEventListener('click', async () => {
-      const ids = getCheckedIds();
-      if (!ids.length || !confirm('Удалить ' + ids.length + ' статей?')) return;
-      await Promise.all(ids.map(id => deleteDoc(doc(fdb,'news',id))));
-      newsItems = newsItems.filter(n => !ids.includes(n._id));
-      renderNewsTable(); updateNewsBadge(); toast(ids.length + ' статей удалено', 'err');
-    });
-
-    /* ── Фильтры и поиск ── */
-    document.querySelectorAll('.nws-filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nws-filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        newsFilter = btn.dataset.filter;
-        renderNewsTable();
-      });
-    });
-    const nwsSearchEl = document.getElementById('nws-search');
-    if (nwsSearchEl) nwsSearchEl.addEventListener('input', function() { newsSearch = this.value; renderNewsTable(); });
-    const nwsRefresh = document.getElementById('news-refresh');
-    if (nwsRefresh) nwsRefresh.addEventListener('click', loadNews);
-
-    /* ── Открытие дровера ── */
-    const nwsOverlay = document.getElementById('nws-overlay');
-    const nwsDrawer  = document.getElementById('nws-drawer');
-
-    function openNewsDrawer(id) {
-      newsEditId = id || null;
-      const n = id ? newsItems.find(x => x._id === id) : null;
-
-      /* Заполняем поля */
-      document.getElementById('nws-inp-title').value   = n?.title   || '';
-      document.getElementById('nws-inp-tag').value     = n?.tag     || '';
-      document.getElementById('nws-inp-date').value    = n?.date    || new Date().toISOString().slice(0,10);
-      document.getElementById('nws-inp-summary').value = n?.summary || '';
-      document.getElementById('nws-inp-body').value    = n?.body    || '';
-      document.getElementById('nws-inp-author').value  = n?.author  || (currentUser?.displayName || '');
-      document.getElementById('nws-inp-image').value   = n?.image   || '';
-      document.getElementById('nws-inp-meta').value    = n?.metaDesc|| '';
-      document.getElementById('nws-inp-slug').value    = n?.slug    || '';
-
-      /* Статус */
-      newsStatus = n?.status || 'published';
-      setNewsStatus(newsStatus);
-
-      /* Заголовок дровера */
-      setText('nws-dr-title', id ? 'Редактировать статью' : 'Новая статья');
-
-      /* Кнопка удаления */
-      const delBtn = document.getElementById('nws-dr-delete');
-      if (delBtn) delBtn.style.display = id ? '' : 'none';
-
-      /* Счётчики */
-      updateNewsCounts();
-
-      /* Переключаемся на таб редактора */
-      switchNewsTab('edit');
-
-      nwsOverlay.classList.add('open');
-      nwsDrawer.classList.add('open');
-      /* Фокус на поле заголовка */
-      setTimeout(() => document.getElementById('nws-inp-title')?.focus(), 80);
-    }
-
-    function closeNewsDrawer() {
-      nwsOverlay.classList.remove('open');
-      nwsDrawer.classList.remove('open');
-      newsEditId = null;
-    }
-
-    nwsOverlay.addEventListener('click', closeNewsDrawer);
-    document.getElementById('nws-dr-cancel').addEventListener('click', closeNewsDrawer);
-    document.getElementById('nws-dr-close').addEventListener('click', closeNewsDrawer);
-    document.getElementById('news-new').addEventListener('click', () => openNewsDrawer(null));
-
-    /* ── Переключение статуса ── */
-    function setNewsStatus(status) {
-      newsStatus = status;
-      document.querySelectorAll('.nws-status-btn').forEach(btn => {
-        const isActive = btn.dataset.status === status;
-        btn.classList.toggle('active', isActive);
-        /* Прямое управление стилями — надёжнее чем CSS specificity */
-        btn.style.background = isActive ? 'var(--accent)' : 'transparent';
-        btn.style.color      = isActive ? '#0a0a0f'       : 'var(--muted)';
-        btn.style.fontWeight = isActive ? '700'            : '400';
-      });
-      const lbl = document.getElementById('nws-save-label');
-      if (lbl) lbl.textContent = status === 'published' ? 'Сохранить' : 'Сохранить черновик';
-    }
-
-    document.querySelectorAll('.nws-status-btn').forEach(btn => {
-      btn.addEventListener('click', () => setNewsStatus(btn.dataset.status));
-    });
-
-    /* ── Переключение вкладок ── */
-    function switchNewsTab(tab) {
-      document.querySelectorAll('.nws-tab').forEach(t => {
-        const isActive = t.dataset.tab === tab;
-        t.classList.toggle('active', isActive);
-        t.style.color          = isActive ? 'var(--accent)'   : 'var(--muted)';
-        t.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
-      });
-      const editPane    = document.getElementById('nws-pane-edit');
-      const previewPane = document.getElementById('nws-pane-preview');
-      if (editPane)    editPane.style.display    = tab === 'edit'    ? '' : 'none';
-      if (previewPane) previewPane.style.display = tab === 'preview' ? '' : 'none';
-      if (tab === 'preview') updateNewsPreview();
-    }
-
-    document.querySelectorAll('.nws-tab').forEach(t => {
-      t.addEventListener('click', () => switchNewsTab(t.dataset.tab));
-    });
-
-    /* ── Счётчики символов ── */
-    function updateNewsCounts() {
-      const summary = document.getElementById('nws-inp-summary')?.value || '';
-      const body    = document.getElementById('nws-inp-body')?.value    || '';
-      const sc = document.getElementById('nws-summary-count');
-      const bc = document.getElementById('nws-body-count');
-      if (sc) { sc.textContent = summary.length; sc.style.color = summary.length > 160 ? 'var(--red)' : ''; }
-      if (bc) bc.textContent = body.length + ' симв.';
-    }
-
-    document.getElementById('nws-inp-summary')?.addEventListener('input', updateNewsCounts);
-    document.getElementById('nws-inp-body')?.addEventListener('input', updateNewsCounts);
-
-    /* Auto-slug из заголовка */
-    document.getElementById('nws-inp-title')?.addEventListener('input', function() {
-      const slugEl = document.getElementById('nws-inp-slug');
-      if (slugEl && !slugEl._manualEdit) {
-        slugEl.value = this.value
-          .toLowerCase()
-          .replace(/[а-яё]/g, c => ({'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'}[c]||c))
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '');
-      }
-      updateNewsPreview();
-    });
-    document.getElementById('nws-inp-slug')?.addEventListener('input', function() { this._manualEdit = true; });
-
-    /* Превью при вводе */
-    ['nws-inp-title','nws-inp-tag','nws-inp-summary','nws-inp-body','nws-inp-date','nws-inp-author','nws-inp-image'].forEach(id => {
-      document.getElementById(id)?.addEventListener('input', () => {
-        if (document.getElementById('nws-pane-preview')?.style.display !== 'none') updateNewsPreview();
-      });
-    });
-
-    /* ── Toolbar форматирования ── */
-    document.querySelectorAll('.nws-fmt').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const ta = document.getElementById('nws-inp-body');
-        if (!ta) return;
-        const start = ta.selectionStart;
-        const end   = ta.selectionEnd;
-        const sel   = ta.value.slice(start, end);
-        const cmd   = btn.dataset.cmd;
-        let insert  = '';
-
-        if (cmd === 'bold')   insert = '**' + (sel||'текст') + '**';
-        if (cmd === 'italic') insert = '*' + (sel||'текст') + '*';
-        if (cmd === 'h2')     insert = '\n## ' + (sel||'Заголовок') + '\n';
-        if (cmd === 'h3')     insert = '\n### ' + (sel||'Заголовок') + '\n';
-        if (cmd === 'ul')     insert = '\n- ' + (sel||'Пункт списка') + '\n';
-        if (cmd === 'quote')  insert = '\n> ' + (sel||'Цитата') + '\n';
-        if (cmd === 'hr')     insert = '\n---\n';
-        if (cmd === 'link')   insert = '[' + (sel||'текст') + '](https://...)';
-
-        ta.value = ta.value.slice(0, start) + insert + ta.value.slice(end);
-        ta.focus();
-        const newPos = start + insert.length;
-        ta.setSelectionRange(newPos, newPos);
-        updateNewsCounts();
-      });
-    });
-
-    /* ── Превью ── */
-    function markdownToHtml(md) {
-      return md
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-        .replace(/^- (.+)$/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-        .replace(/^---$/gm, '<hr>')
-        .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-    }
-
-    function updateNewsPreview() {
-      const title   = document.getElementById('nws-inp-title')?.value    || '';
-      const tag     = document.getElementById('nws-inp-tag')?.value      || '';
-      const summary = document.getElementById('nws-inp-summary')?.value  || '';
-      const body    = document.getElementById('nws-inp-body')?.value     || '';
-      const date    = document.getElementById('nws-inp-date')?.value     || '';
-      const author  = document.getElementById('nws-inp-author')?.value   || '';
-      const image   = document.getElementById('nws-inp-image')?.value    || '';
-
-      const el = id => document.getElementById(id);
-      if (el('nws-prev-title'))   el('nws-prev-title').textContent  = title  || '(без заголовка)';
-      if (el('nws-prev-tag'))     el('nws-prev-tag').textContent    = tag    || 'Тег';
-      if (el('nws-prev-summary')) el('nws-prev-summary').textContent= summary;
-      if (el('nws-prev-date'))    el('nws-prev-date').textContent   = fmtNewsDate(date);
-      if (el('nws-prev-author'))  el('nws-prev-author').textContent = author ? 'Автор: ' + author : '';
-      if (el('nws-prev-body'))    el('nws-prev-body').innerHTML     = body ? markdownToHtml(body) : '<span style="color:var(--muted-2);font-size:.8rem">Текст статьи пуст</span>';
-
-      const imgWrap = el('nws-prev-img');
-      const imgEl   = el('nws-prev-img-el');
-      if (imgWrap && imgEl) {
-        if (image) { imgEl.src = image; imgWrap.style.display = ''; }
-        else { imgWrap.style.display = 'none'; }
-      }
-    }
-
-    /* ── Сохранение в Firestore ── */
-    async function saveNewsToFirestore(status) {
-      const title = document.getElementById('nws-inp-title')?.value.trim();
-      if (!title) { toast('Введите заголовок', 'err'); return; }
-
-      const btn = document.getElementById('nws-dr-save');
-      if (btn) { btn.disabled = true; }
-
-      const data = {
-        title,
-        tag:      document.getElementById('nws-inp-tag')?.value.trim()     || '',
-        date:     document.getElementById('nws-inp-date')?.value           || new Date().toISOString().slice(0,10),
-        summary:  document.getElementById('nws-inp-summary')?.value.trim() || '',
-        body:     document.getElementById('nws-inp-body')?.value           || '',
-        author:   document.getElementById('nws-inp-author')?.value.trim()  || '',
-        image:    document.getElementById('nws-inp-image')?.value.trim()   || '',
-        metaDesc: document.getElementById('nws-inp-meta')?.value.trim()    || '',
-        slug:     document.getElementById('nws-inp-slug')?.value.trim()    || '',
-        status,
-        updatedAt: serverTimestamp(),
-      };
-
-      /* Убираем пустые строки */
-      Object.keys(data).forEach(k => { if (data[k] === '' && k !== 'updatedAt') delete data[k]; });
-
-      try {
-        if (newsEditId) {
-          await updateDoc(doc(fdb, 'news', newsEditId), data);
-          const idx = newsItems.findIndex(n => n._id === newsEditId);
-          if (idx >= 0) newsItems[idx] = { ...newsItems[idx], ...data };
-          toast('Статья обновлена ✓', 'ok');
-        } else {
-          data.createdAt = serverTimestamp();
-          const ref = await addDoc(collection(fdb, 'news'), data);
-          newsItems.unshift({ _id: ref.id, ...data });
-          toast('Статья создана ✓', 'ok');
-        }
-        renderNewsTable(); updateNewsBadge();
-        closeNewsDrawer();
-      } catch(e) {
-        toast('Ошибка: ' + e.message, 'err');
-      } finally {
-        if (btn) { btn.disabled = false; }
-      }
-    }
-
-    document.getElementById('nws-dr-save')?.addEventListener('click', () => saveNewsToFirestore(newsStatus));
-    document.getElementById('nws-dr-save-draft')?.addEventListener('click', () => saveNewsToFirestore('draft'));
-
-    /* Удаление из дровера */
-    document.getElementById('nws-dr-delete')?.addEventListener('click', async () => {
-      if (!newsEditId) return;
-      const n = newsItems.find(x => x._id === newsEditId);
-      if (!confirm('Удалить «' + (n?.title||'статью') + '»? Действие необратимо.')) return;
-      try {
-        await deleteDoc(doc(fdb, 'news', newsEditId));
-        newsItems = newsItems.filter(x => x._id !== newsEditId);
-        renderNewsTable(); updateNewsBadge();
-        closeNewsDrawer();
-        toast('Статья удалена', 'err');
-      } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
-    });
 
     window._dash = { toast, refreshAll };
 
   })(); /* конец IIFE */
+
+
+  
+  /* Хелпер esc для новостей */
+  function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ══════════════════════════════════════════════════════════
+     НОВОСТИ — module-scope (fdb, addDoc, currentUser доступны)
+  ══════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════
+     НОВОСТИ — Firestore /news
+  ══════════════════════════════════════════════════════════ */
+  let newsItems   = [];  /* кэш из Firestore */
+  let newsFilter  = 'all';
+  let newsSearch  = '';
+  let newsEditId  = null; /* null = новая, string = edit */
+  let newsStatus  = 'published';
+
+  const MONTHS_SH = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+  function fmtNewsDate(s) {
+    if (!s) return '—';
+    const d = new Date(s + 'T00:00:00');
+    return d.getDate() + ' ' + MONTHS_SH[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  /* ── Загрузка из Firestore ── */
+  async function loadNews() {
+    const tbody = document.getElementById('news-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted-2)">Загрузка…</td></tr>';
+    try {
+      const snap = await getDocs(query(collection(fdb, 'news'), orderBy('date', 'desc')));
+      newsItems = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      renderNewsTable();
+      updateNewsBadge();
+    } catch(e) {
+      if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Ошибка: ' + escH(e.message) + '</td></tr>';
+    }
+  }
+
+  function updateNewsBadge() {
+    const total = newsItems.length;
+    const pub   = newsItems.filter(n => n.status === 'published').length;
+    const draft = newsItems.filter(n => n.status === 'draft').length;
+    const last  = newsItems.find(n => n.status === 'published');
+    _setText('nws-total', total);
+    _setText('nws-pub',   pub);
+    _setText('nws-draft', draft);
+    _setText('nws-last',  last ? fmtNewsDate(last.date) : '—');
+    /* Бейдж в sidebar */
+    const badge = document.getElementById('sb-badge-news');
+    if (badge) { badge.textContent = draft; badge.className = 'sb-badge' + (draft ? ' yellow' : ''); }
+  }
+
+  /* ── Рендер таблицы ── */
+  function renderNewsTable() {
+    const tbody = document.getElementById('news-tbody');
+    if (!tbody) return;
+    let list = newsItems.slice();
+    if (newsFilter === 'published') list = list.filter(n => n.status === 'published');
+    if (newsFilter === 'draft')     list = list.filter(n => n.status !== 'published');
+    if (newsSearch) list = list.filter(n => (n.title||'').toLowerCase().includes(newsSearch.toLowerCase()));
+
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted-2)">Нет статей</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(n => {
+      const isPub = n.status === 'published';
+      const pill  = isPub
+        ? '<span class="pill pill-green"><span class="pill-dot"></span>Опубликовано</span>'
+        : '<span class="pill pill-yellow"><span class="pill-dot"></span>Черновик</span>';
+      return '<tr data-nws-id="' + escH(n._id) + '" style="cursor:pointer">' +
+        '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb nws-check" data-id="' + escH(n._id) + '" /></td>' +
+        '<td><div style="font-size:.84rem;color:var(--text);font-weight:400">' + escH(n.title||'(без заголовка)') + '</div>' +
+          (n.summary ? '<div style="font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">' + escH(n.summary.slice(0,80)) + '</div>' : '') +
+        '</td>' +
+        '<td>' + (n.tag ? '<span class="pill pill-muted">' + escH(n.tag) + '</span>' : '<span style="color:var(--muted-2);font-size:.72rem">—</span>') + '</td>' +
+        '<td>' + pill + '</td>' +
+        '<td class="td-mono" style="font-size:.72rem">' + escH(n.date||'—') + '</td>' +
+        '<td style="font-size:.72rem;color:var(--muted)">' + escH(n.author||'—') + '</td>' +
+        '<td><div style="display:flex;gap:4px">' +
+          '<button class="icon-btn nws-edit-btn" data-id="' + escH(n._id) + '" title="Редактировать"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5l2 2-6.5 6.5H2V7.5l6.5-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>' +
+          '<button class="icon-btn del nws-toggle-btn" data-id="' + escH(n._id) + '" data-pub="' + isPub + '" title="' + (isPub ? 'В черновик' : 'Опубликовать') + '">' +
+            (isPub
+              ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5l2.5 2.5 5.5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+              : '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/></svg>') +
+          '</button>' +
+          '<button class="icon-btn del nws-del-btn" data-id="' + escH(n._id) + '" title="Удалить"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 3.5h8M4.5 3.5V2H7.5v1.5M5 6v2.5M7 6v2.5M3 3.5l.5 6.5h5l.5-6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+
+    /* Клики по строкам */
+    tbody.querySelectorAll('tr[data-nws-id]').forEach(row => {
+      row.addEventListener('click', e => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        openNewsDrawer(row.dataset.nwsId);
+      });
+    });
+
+    /* Кнопка редактировать */
+    tbody.querySelectorAll('.nws-edit-btn').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); openNewsDrawer(btn.dataset.id); });
+    });
+
+    /* Быстрый переключатель статуса */
+    tbody.querySelectorAll('.nws-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const newStatus = btn.dataset.pub === 'true' ? 'draft' : 'published';
+        try {
+          await updateDoc(doc(fdb, 'news', btn.dataset.id), { status: newStatus, updatedAt: serverTimestamp() });
+          const idx = newsItems.findIndex(n => n._id === btn.dataset.id);
+          if (idx >= 0) newsItems[idx].status = newStatus;
+          renderNewsTable(); updateNewsBadge();
+          _toast(newStatus === 'published' ? 'Опубликовано ✓' : 'Переведено в черновик', 'ok');
+        } catch(e) { _toast('Ошибка: ' + e.message, 'err'); }
+      });
+    });
+
+    /* Удаление */
+    tbody.querySelectorAll('.nws-del-btn').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const n = newsItems.find(x => x._id === btn.dataset.id);
+        if (!confirm('Удалить «' + (n?.title||'статью') + '»?')) return;
+        try {
+          await deleteDoc(doc(fdb, 'news', btn.dataset.id));
+          newsItems = newsItems.filter(x => x._id !== btn.dataset.id);
+          renderNewsTable(); updateNewsBadge();
+          _toast('Статья удалена', 'err');
+        } catch(e) { _toast('Ошибка: ' + e.message, 'err'); }
+      });
+    });
+
+    /* Чекбоксы */
+    bindNewsCheckboxes();
+  }
+
+  /* ── Чекбоксы и массовые действия ── */
+  function bindNewsCheckboxes() {
+    const checkAll = document.getElementById('nws-check-all');
+    const bulkBar  = document.getElementById('nws-bulk-bar');
+    const bulkCount= document.getElementById('nws-bulk-count');
+
+    function updateBulk() {
+      const checked = document.querySelectorAll('.nws-check:checked');
+      if (bulkBar) bulkBar.style.display = checked.length ? 'flex' : 'none';
+      if (bulkCount) bulkCount.textContent = 'Выбрано: ' + checked.length;
+    }
+
+    document.querySelectorAll('.nws-check').forEach(cb => {
+      cb.addEventListener('change', updateBulk);
+    });
+    if (checkAll) {
+      checkAll.addEventListener('change', () => {
+        document.querySelectorAll('.nws-check').forEach(cb => { cb.checked = checkAll.checked; });
+        updateBulk();
+      });
+    }
+  }
+
+  /* Массовые действия */
+  function getCheckedIds() {
+    return [...document.querySelectorAll('.nws-check:checked')].map(cb => cb.dataset.id);
+  }
+
+  const nwsBulkPub = document.getElementById('nws-bulk-publish');
+  const nwsBulkDraft = document.getElementById('nws-bulk-draft');
+  const nwsBulkDel = document.getElementById('nws-bulk-delete');
+
+  if (nwsBulkPub) nwsBulkPub.addEventListener('click', async () => {
+    const ids = getCheckedIds();
+    if (!ids.length) return;
+    await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'published', updatedAt:serverTimestamp() })));
+    ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='published'; });
+    renderNewsTable(); updateNewsBadge(); _toast(ids.length + ' статей опубликовано', 'ok');
+  });
+  if (nwsBulkDraft) nwsBulkDraft.addEventListener('click', async () => {
+    const ids = getCheckedIds();
+    if (!ids.length) return;
+    await Promise.all(ids.map(id => updateDoc(doc(fdb,'news',id), { status:'draft', updatedAt:serverTimestamp() })));
+    ids.forEach(id => { const n = newsItems.find(x=>x._id===id); if(n) n.status='draft'; });
+    renderNewsTable(); updateNewsBadge(); _toast(ids.length + ' статей → черновик', 'ok');
+  });
+  if (nwsBulkDel) nwsBulkDel.addEventListener('click', async () => {
+    const ids = getCheckedIds();
+    if (!ids.length || !confirm('Удалить ' + ids.length + ' статей?')) return;
+    await Promise.all(ids.map(id => deleteDoc(doc(fdb,'news',id))));
+    newsItems = newsItems.filter(n => !ids.includes(n._id));
+    renderNewsTable(); updateNewsBadge(); _toast(ids.length + ' статей удалено', 'err');
+  });
+
+  /* ── Фильтры и поиск ── */
+  document.querySelectorAll('.nws-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nws-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      newsFilter = btn.dataset.filter;
+      renderNewsTable();
+    });
+  });
+  const nwsSearchEl = document.getElementById('nws-search');
+  if (nwsSearchEl) nwsSearchEl.addEventListener('input', function() { newsSearch = this.value; renderNewsTable(); });
+  const nwsRefresh = document.getElementById('news-refresh');
+  if (nwsRefresh) nwsRefresh.addEventListener('click', loadNews);
+
+  /* ── Открытие дровера ── */
+  const nwsOverlay = document.getElementById('nws-overlay');
+  const nwsDrawer  = document.getElementById('nws-drawer');
+
+  function openNewsDrawer(id) {
+    newsEditId = id || null;
+    const n = id ? newsItems.find(x => x._id === id) : null;
+
+    /* Заполняем поля */
+    document.getElementById('nws-inp-title').value   = n?.title   || '';
+    document.getElementById('nws-inp-tag').value     = n?.tag     || '';
+    document.getElementById('nws-inp-date').value    = n?.date    || new Date().toISOString().slice(0,10);
+    document.getElementById('nws-inp-summary').value = n?.summary || '';
+    document.getElementById('nws-inp-body').value    = n?.body    || '';
+    document.getElementById('nws-inp-author').value  = n?.author  || (currentUser?.displayName || '');
+    document.getElementById('nws-inp-image').value   = n?.image   || '';
+    document.getElementById('nws-inp-meta').value    = n?.metaDesc|| '';
+    document.getElementById('nws-inp-slug').value    = n?.slug    || '';
+
+    /* Статус */
+    newsStatus = n?.status || 'published';
+    setNewsStatus(newsStatus);
+
+    /* Заголовок дровера */
+    _setText('nws-dr-title', id ? 'Редактировать статью' : 'Новая статья');
+
+    /* Кнопка удаления */
+    const delBtn = document.getElementById('nws-dr-delete');
+    if (delBtn) delBtn.style.display = id ? '' : 'none';
+
+    /* Счётчики */
+    updateNewsCounts();
+
+    /* Переключаемся на таб редактора */
+    switchNewsTab('edit');
+
+    nwsOverlay.classList.add('open');
+    nwsDrawer.classList.add('open');
+    /* Фокус на поле заголовка */
+    setTimeout(() => document.getElementById('nws-inp-title')?.focus(), 80);
+  }
+
+  function closeNewsDrawer() {
+    nwsOverlay.classList.remove('open');
+    nwsDrawer.classList.remove('open');
+    newsEditId = null;
+  }
+
+  nwsOverlay.addEventListener('click', closeNewsDrawer);
+  document.getElementById('nws-dr-cancel').addEventListener('click', closeNewsDrawer);
+  document.getElementById('nws-dr-close').addEventListener('click', closeNewsDrawer);
+  document.getElementById('news-new').addEventListener('click', () => openNewsDrawer(null));
+
+  /* ── Переключение статуса ── */
+  function setNewsStatus(status) {
+    newsStatus = status;
+    document.querySelectorAll('.nws-status-btn').forEach(btn => {
+      const isActive = btn.dataset.status === status;
+      btn.classList.toggle('active', isActive);
+      /* Прямое управление стилями — надёжнее чем CSS specificity */
+      btn.style.background = isActive ? 'var(--accent)' : 'transparent';
+      btn.style.color      = isActive ? '#0a0a0f'       : 'var(--muted)';
+      btn.style.fontWeight = isActive ? '700'            : '400';
+    });
+    const lbl = document.getElementById('nws-save-label');
+    if (lbl) lbl.textContent = status === 'published' ? 'Сохранить' : 'Сохранить черновик';
+  }
+
+  document.querySelectorAll('.nws-status-btn').forEach(btn => {
+    btn.addEventListener('click', () => setNewsStatus(btn.dataset.status));
+  });
+
+  /* ── Переключение вкладок ── */
+  function switchNewsTab(tab) {
+    document.querySelectorAll('.nws-tab').forEach(t => {
+      const isActive = t.dataset.tab === tab;
+      t.classList.toggle('active', isActive);
+      t.style.color          = isActive ? 'var(--accent)'   : 'var(--muted)';
+      t.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+    });
+    const editPane    = document.getElementById('nws-pane-edit');
+    const previewPane = document.getElementById('nws-pane-preview');
+    if (editPane)    editPane.style.display    = tab === 'edit'    ? '' : 'none';
+    if (previewPane) previewPane.style.display = tab === 'preview' ? '' : 'none';
+    if (tab === 'preview') updateNewsPreview();
+  }
+
+  document.querySelectorAll('.nws-tab').forEach(t => {
+    t.addEventListener('click', () => switchNewsTab(t.dataset.tab));
+  });
+
+  /* ── Счётчики символов ── */
+  function updateNewsCounts() {
+    const summary = document.getElementById('nws-inp-summary')?.value || '';
+    const body    = document.getElementById('nws-inp-body')?.value    || '';
+    const sc = document.getElementById('nws-summary-count');
+    const bc = document.getElementById('nws-body-count');
+    if (sc) { sc.textContent = summary.length; sc.style.color = summary.length > 160 ? 'var(--red)' : ''; }
+    if (bc) bc.textContent = body.length + ' симв.';
+  }
+
+  document.getElementById('nws-inp-summary')?.addEventListener('input', updateNewsCounts);
+  document.getElementById('nws-inp-body')?.addEventListener('input', updateNewsCounts);
+
+  /* Auto-slug из заголовка */
+  document.getElementById('nws-inp-title')?.addEventListener('input', function() {
+    const slugEl = document.getElementById('nws-inp-slug');
+    if (slugEl && !slugEl._manualEdit) {
+      slugEl.value = this.value
+        .toLowerCase()
+        .replace(/[а-яё]/g, c => ({'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'}[c]||c))
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+    }
+    updateNewsPreview();
+  });
+  document.getElementById('nws-inp-slug')?.addEventListener('input', function() { this._manualEdit = true; });
+
+  /* Превью при вводе */
+  ['nws-inp-title','nws-inp-tag','nws-inp-summary','nws-inp-body','nws-inp-date','nws-inp-author','nws-inp-image'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      if (document.getElementById('nws-pane-preview')?.style.display !== 'none') updateNewsPreview();
+    });
+  });
+
+  /* ── Toolbar форматирования ── */
+  document.querySelectorAll('.nws-fmt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ta = document.getElementById('nws-inp-body');
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end   = ta.selectionEnd;
+      const sel   = ta.value.slice(start, end);
+      const cmd   = btn.dataset.cmd;
+      let insert  = '';
+
+      if (cmd === 'bold')   insert = '**' + (sel||'текст') + '**';
+      if (cmd === 'italic') insert = '*' + (sel||'текст') + '*';
+      if (cmd === 'h2')     insert = '\n## ' + (sel||'Заголовок') + '\n';
+      if (cmd === 'h3')     insert = '\n### ' + (sel||'Заголовок') + '\n';
+      if (cmd === 'ul')     insert = '\n- ' + (sel||'Пункт списка') + '\n';
+      if (cmd === 'quote')  insert = '\n> ' + (sel||'Цитата') + '\n';
+      if (cmd === 'hr')     insert = '\n---\n';
+      if (cmd === 'link')   insert = '[' + (sel||'текст') + '](https://...)';
+
+      ta.value = ta.value.slice(0, start) + insert + ta.value.slice(end);
+      ta.focus();
+      const newPos = start + insert.length;
+      ta.setSelectionRange(newPos, newPos);
+      updateNewsCounts();
+    });
+  });
+
+  /* ── Превью ── */
+  function markdownToHtml(md) {
+    return md
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      .replace(/^---$/gm, '<hr>')
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function updateNewsPreview() {
+    const title   = document.getElementById('nws-inp-title')?.value    || '';
+    const tag     = document.getElementById('nws-inp-tag')?.value      || '';
+    const summary = document.getElementById('nws-inp-summary')?.value  || '';
+    const body    = document.getElementById('nws-inp-body')?.value     || '';
+    const date    = document.getElementById('nws-inp-date')?.value     || '';
+    const author  = document.getElementById('nws-inp-author')?.value   || '';
+    const image   = document.getElementById('nws-inp-image')?.value    || '';
+
+    const el = id => document.getElementById(id);
+    if (el('nws-prev-title'))   el('nws-prev-title').textContent  = title  || '(без заголовка)';
+    if (el('nws-prev-tag'))     el('nws-prev-tag').textContent    = tag    || 'Тег';
+    if (el('nws-prev-summary')) el('nws-prev-summary').textContent= summary;
+    if (el('nws-prev-date'))    el('nws-prev-date').textContent   = fmtNewsDate(date);
+    if (el('nws-prev-author'))  el('nws-prev-author').textContent = author ? 'Автор: ' + author : '';
+    if (el('nws-prev-body'))    el('nws-prev-body').innerHTML     = body ? markdownToHtml(body) : '<span style="color:var(--muted-2);font-size:.8rem">Текст статьи пуст</span>';
+
+    const imgWrap = el('nws-prev-img');
+    const imgEl   = el('nws-prev-img-el');
+    if (imgWrap && imgEl) {
+      if (image) { imgEl.src = image; imgWrap.style.display = ''; }
+      else { imgWrap.style.display = 'none'; }
+    }
+  }
+
+  /* ── Сохранение в Firestore ── */
+  async function saveNewsToFirestore(status) {
+    const title = document.getElementById('nws-inp-title')?.value.trim();
+    if (!title) { _toast('Введите заголовок', 'err'); return; }
+
+    const btn = document.getElementById('nws-dr-save');
+    if (btn) { btn.disabled = true; }
+
+    const data = {
+      title,
+      tag:      document.getElementById('nws-inp-tag')?.value.trim()     || '',
+      date:     document.getElementById('nws-inp-date')?.value           || new Date().toISOString().slice(0,10),
+      summary:  document.getElementById('nws-inp-summary')?.value.trim() || '',
+      body:     document.getElementById('nws-inp-body')?.value           || '',
+      author:   document.getElementById('nws-inp-author')?.value.trim()  || '',
+      image:    document.getElementById('nws-inp-image')?.value.trim()   || '',
+      metaDesc: document.getElementById('nws-inp-meta')?.value.trim()    || '',
+      slug:     document.getElementById('nws-inp-slug')?.value.trim()    || '',
+      status,
+      updatedAt: serverTimestamp(),
+    };
+
+    /* Убираем пустые строки */
+    Object.keys(data).forEach(k => { if (data[k] === '' && k !== 'updatedAt') delete data[k]; });
+
+    try {
+      if (newsEditId) {
+        await updateDoc(doc(fdb, 'news', newsEditId), data);
+        const idx = newsItems.findIndex(n => n._id === newsEditId);
+        if (idx >= 0) newsItems[idx] = { ...newsItems[idx], ...data };
+        _toast('Статья обновлена ✓', 'ok');
+      } else {
+        data.createdAt = serverTimestamp();
+        const ref = await addDoc(collection(fdb, 'news'), data);
+        newsItems.unshift({ _id: ref.id, ...data });
+        _toast('Статья создана ✓', 'ok');
+      }
+      renderNewsTable(); updateNewsBadge();
+      closeNewsDrawer();
+    } catch(e) {
+      _toast('Ошибка: ' + e.message, 'err');
+    } finally {
+      if (btn) { btn.disabled = false; }
+    }
+  }
+
+  document.getElementById('nws-dr-save')?.addEventListener('click', () => saveNewsToFirestore(newsStatus));
+  document.getElementById('nws-dr-save-draft')?.addEventListener('click', () => saveNewsToFirestore('draft'));
+
+  /* Удаление из дровера */
+  document.getElementById('nws-dr-delete')?.addEventListener('click', async () => {
+    if (!newsEditId) return;
+    const n = newsItems.find(x => x._id === newsEditId);
+    if (!confirm('Удалить «' + (n?.title||'статью') + '»? Действие необратимо.')) return;
+    try {
+      await deleteDoc(doc(fdb, 'news', newsEditId));
+      newsItems = newsItems.filter(x => x._id !== newsEditId);
+      renderNewsTable(); updateNewsBadge();
+      closeNewsDrawer();
+      _toast('Статья удалена', 'err');
+    } catch(e) { _toast('Ошибка: ' + e.message, 'err'); }
+  });
+
 
 </script>
 
