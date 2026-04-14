@@ -669,7 +669,10 @@
     /* ── ПРОФИЛЬ ─────────────────────────────────────────── */
     /* ── РЕДАКТОР НОВОСТЕЙ ────────────────────────────────── */
     .nws-tab.active { color: var(--accent) !important; border-bottom-color: var(--accent) !important; }
-    .nws-status-btn.active { background: var(--accent) !important; color: #0a0a0f !important; }
+    /* inline style override через attribute selector */
+    button.nws-status-btn.active, [class*="nws-status-btn"][class*="active"] {
+      background: var(--accent) !important; color: #0a0a0f !important; font-weight: 700 !important;
+    }
     .nws-fmt:hover { background: var(--surface-3) !important; color: var(--text) !important; }
     .nws-filter-btn { font-size:.62rem; }
     .nws-filter-btn.active { background:var(--accent-dim); border-color:var(--accent-mid); color:var(--accent); }
@@ -683,9 +686,6 @@
     #nws-prev-body ul { padding-left:18px; }
     #nws-prev-body a { color:var(--accent);text-decoration:underline; }
     #nws-prev-body hr { border:none;border-top:1px solid var(--border);margin:14px 0; }
-
-    /* pill жёлтый */
-    .pill-yellow { color:var(--yellow,#d4a843);background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25); }
 
     @keyframes pulse-g { 0%,100%{box-shadow:0 0 0 0 rgba(76,175,130,.4)} 50%{box-shadow:0 0 0 5px rgba(76,175,130,0)} }
     @keyframes pulse-r { 0%,100%{box-shadow:0 0 0 0 rgba(208,96,112,.4)} 50%{box-shadow:0 0 0 5px rgba(208,96,112,0)} }
@@ -2549,7 +2549,7 @@
       if (sb) sb.classList.add('active');
       setText('bc-page', BC_LABELS[pageId] || pageId);
       const newBtn = document.getElementById('tb-new-btn');
-      if (newBtn) newBtn.style.display = ['reports','news','team','careers'].includes(pageId) ? '' : 'none';
+      if (newBtn) { newBtn.style.display = ['news'].includes(pageId) ? '' : 'none'; newBtn.title = 'Новая статья'; }
       /* При открытии Workers-страниц — загружаем из Firestore */
       if (pageId === 'workers')        loadWorkers();
       if (pageId === 'worker-reports') loadAllWorkerReports();
@@ -2591,7 +2591,14 @@
       });
     });
 
-    document.getElementById('tb-new-btn').addEventListener('click', () => openDrawer('Новый элемент', null));
+    document.getElementById('tb-new-btn').addEventListener('click', () => {
+      /* Открываем нужный дровер в зависимости от текущей страницы */
+      const active = document.querySelector('.page.active');
+      const pageId = active ? active.id.replace('page-', '') : '';
+      if (pageId === 'news') { openNewsDrawer(null); return; }
+      /* Для остальных страниц — кнопка скрыта, но на всякий случай */
+      toast('Выберите раздел для добавления', 'ok');
+    });
 
     const sbOverlay = document.getElementById('sb-overlay');
     document.getElementById('menuBtn').addEventListener('click', () => {
@@ -2638,8 +2645,13 @@
     droverlay.addEventListener('click', closeDrawer);
     document.getElementById('dr-close').addEventListener('click', closeDrawer);
     document.getElementById('dr-cancel').addEventListener('click', closeDrawer);
-    document.getElementById('dr-save').addEventListener('click', () => { toast('Сохранено ✓', 'ok'); closeDrawer(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+    document.getElementById('dr-save').addEventListener('click', () => { closeDrawer(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeDrawer();
+        if (document.getElementById('nws-drawer')?.classList.contains('open')) closeNewsDrawer();
+      }
+    });
 
     /* ── НАСТРОЙКИ ───────────────────────────────────────── */
     const setSaveName = document.getElementById('set-save-name');
@@ -3542,7 +3554,6 @@
 
       /* Заголовок дровера */
       setText('nws-dr-title', id ? 'Редактировать статью' : 'Новая статья');
-      setText('nws-save-label', newsStatus === 'published' ? 'Сохранить' : 'Опубликовать');
 
       /* Кнопка удаления */
       const delBtn = document.getElementById('nws-dr-delete');
@@ -3556,6 +3567,8 @@
 
       nwsOverlay.classList.add('open');
       nwsDrawer.classList.add('open');
+      /* Фокус на поле заголовка */
+      setTimeout(() => document.getElementById('nws-inp-title')?.focus(), 80);
     }
 
     function closeNewsDrawer() {
@@ -3573,10 +3586,15 @@
     function setNewsStatus(status) {
       newsStatus = status;
       document.querySelectorAll('.nws-status-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.status === status);
+        const isActive = btn.dataset.status === status;
+        btn.classList.toggle('active', isActive);
+        /* Прямое управление стилями — надёжнее чем CSS specificity */
+        btn.style.background = isActive ? 'var(--accent)' : 'transparent';
+        btn.style.color      = isActive ? '#0a0a0f'       : 'var(--muted)';
+        btn.style.fontWeight = isActive ? '700'            : '400';
       });
       const lbl = document.getElementById('nws-save-label');
-      if (lbl) lbl.textContent = status === 'published' ? 'Опубликовать' : 'Сохранить черновик';
+      if (lbl) lbl.textContent = status === 'published' ? 'Сохранить' : 'Сохранить черновик';
     }
 
     document.querySelectorAll('.nws-status-btn').forEach(btn => {
@@ -3585,9 +3603,16 @@
 
     /* ── Переключение вкладок ── */
     function switchNewsTab(tab) {
-      document.querySelectorAll('.nws-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-      document.getElementById('nws-pane-edit').style.display    = tab === 'edit'    ? '' : 'none';
-      document.getElementById('nws-pane-preview').style.display = tab === 'preview' ? '' : 'none';
+      document.querySelectorAll('.nws-tab').forEach(t => {
+        const isActive = t.dataset.tab === tab;
+        t.classList.toggle('active', isActive);
+        t.style.color          = isActive ? 'var(--accent)'   : 'var(--muted)';
+        t.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+      });
+      const editPane    = document.getElementById('nws-pane-edit');
+      const previewPane = document.getElementById('nws-pane-preview');
+      if (editPane)    editPane.style.display    = tab === 'edit'    ? '' : 'none';
+      if (previewPane) previewPane.style.display = tab === 'preview' ? '' : 'none';
       if (tab === 'preview') updateNewsPreview();
     }
 
@@ -3761,9 +3786,6 @@
         toast('Статья удалена', 'err');
       } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
     });
-
-    /* Загружаем новости при первом открытии вкладки */
-    const origNavigate = navigate;
 
     window._dash = { toast, refreshAll };
 
