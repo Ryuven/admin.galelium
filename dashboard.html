@@ -895,6 +895,10 @@
           Все отчёты
           <span class="sb-badge" id="sb-badge-wr">0</span>
         </a>
+        <a class="sb-link" data-page="add-report" href="#">
+          <svg class="sb-icon" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 4.5v6M4.5 7.5h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          Добавить отчёт
+        </a>
       </div>
 
       <div class="sb-section">
@@ -1668,6 +1672,217 @@
         <div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px" id="wr-count-label"></div>
         <div id="wr-list" class="row-list">
           <div class="empty"><p>Загрузка…</p></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ╔══════════════════════════════════
+         ║ ДОБАВИТЬ ОТЧЁТ (от лица сборщика)
+         ╚════════════════════════════════ -->
+    <div class="page" id="page-add-report">
+      <div class="content-pad">
+
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap">
+          <div>
+            <span class="eyebrow">Firestore · /reports · Ручной ввод</span>
+            <div class="section-title">Добавить отчёт</div>
+            <div style="font-size:.76rem;color:var(--muted);margin-top:6px;max-width:480px">
+              Отчёт добавляется от имени выбранного сборщика и попадает в общую коллекцию вместе с обычными отчётами.
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="ar-reset-btn">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M10 6A4 4 0 0 1 2.5 9M2 6a4 4 0 0 1 7.5-3M10.5 3l-.5 3-3-.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Очистить
+            </button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;max-width:860px">
+
+          <!-- Левая колонка: выбор сборщика + основные поля -->
+          <div style="display:flex;flex-direction:column;gap:2px">
+
+            <!-- Блок: Сборщик -->
+            <div class="ds">
+              <div class="ds-title">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Сборщик
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <!-- Выбор из списка или ввод вручную -->
+                <div class="field">
+                  <label>Выбрать из базы</label>
+                  <select id="ar-worker-select">
+                    <option value="">— Загрузка сборщиков… —</option>
+                  </select>
+                  <div class="field-hint">Или введите вручную ниже</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="flex:1;height:1px;background:var(--border)"></div>
+                  <span style="font-size:.6rem;color:var(--muted-2);letter-spacing:.12em;text-transform:uppercase">или вручную</span>
+                  <div style="flex:1;height:1px;background:var(--border)"></div>
+                </div>
+                <div class="field">
+                  <label>Имя сборщика <span style="color:var(--accent)">*</span></label>
+                  <input type="text" id="ar-worker-name" placeholder="Иван Иванов" />
+                </div>
+                <div class="field">
+                  <label>UID <span style="color:var(--muted-2);font-size:.64rem;letter-spacing:0;text-transform:none">(заполняется автоматически)</span></label>
+                  <input type="text" id="ar-worker-uid" placeholder="auto" style="font-family:monospace;font-size:.76rem;color:var(--muted)" />
+                  <div class="field-hint">Из базы — реальный UID. Вручную — сгенерируется как manual_имя</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Блок: Основная инфо -->
+            <div class="ds">
+              <div class="ds-title">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3.5 6h5M3.5 4h5M3.5 8h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                Основное
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="field">
+                  <label>Дата <span style="color:var(--accent)">*</span></label>
+                  <input type="date" id="ar-date" />
+                </div>
+                <div class="field">
+                  <label>Адрес объекта <span style="color:var(--accent)">*</span></label>
+                  <input type="text" id="ar-address" placeholder="ул. Ленина 5, Склад" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Блок: Приход -->
+            <div class="ds">
+              <div class="ds-title" style="color:var(--green)">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex-shrink:0"></span>
+                Приход
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="field">
+                  <label>Время <span style="color:var(--accent)">*</span></label>
+                  <input type="time" id="ar-arr-time" />
+                </div>
+                <div class="field">
+                  <label>Фото ТСД (ссылка)</label>
+                  <input type="url" id="ar-arr-photo" placeholder="https://…" />
+                </div>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label>Заметка</label>
+                <textarea id="ar-arr-note" style="min-height:60px" placeholder="Примечания при приходе…"></textarea>
+              </div>
+            </div>
+
+            <!-- Блок: Уход -->
+            <div class="ds">
+              <div class="ds-title" style="color:var(--red)">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block;flex-shrink:0"></span>
+                Уход
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="field">
+                  <label>Время <span style="color:var(--accent)">*</span></label>
+                  <input type="time" id="ar-dep-time" />
+                </div>
+                <div class="field">
+                  <label>Фото ТСД (ссылка)</label>
+                  <input type="url" id="ar-dep-photo-tsd" placeholder="https://…" />
+                </div>
+                <div class="field">
+                  <label>Статистика 1 (ссылка)</label>
+                  <input type="url" id="ar-dep-photo-s1" placeholder="https://…" />
+                </div>
+                <div class="field">
+                  <label>Статистика 2 (ссылка)</label>
+                  <input type="url" id="ar-dep-photo-s2" placeholder="https://…" />
+                </div>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label>Заметка</label>
+                <textarea id="ar-dep-note" style="min-height:60px" placeholder="Примечания при уходе…"></textarea>
+              </div>
+            </div>
+
+          </div><!-- /левая колонка -->
+
+          <!-- Правая колонка: показатели + превью -->
+          <div style="display:flex;flex-direction:column;gap:2px">
+
+            <!-- Блок: Показатели -->
+            <div class="ds">
+              <div class="ds-title">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 9l2.5-3 3 2 4-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Показатели смены
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="field">
+                  <label>Позиций собрано</label>
+                  <input type="number" id="ar-positions" placeholder="0" min="0" />
+                </div>
+                <div class="field">
+                  <label>Заказов выполнено</label>
+                  <input type="number" id="ar-orders" placeholder="0" min="0" />
+                </div>
+                <div class="field">
+                  <label>Корректировки %</label>
+                  <input type="number" id="ar-corr" placeholder="0.0" min="0" step="0.1" />
+                  <div class="field-hint">Норма ≤ 4%</div>
+                </div>
+                <div class="field">
+                  <label>Ср. скорость, сек</label>
+                  <input type="number" id="ar-speed" placeholder="0" min="0" />
+                  <div class="field-hint">Норма ≤ 38 с</div>
+                </div>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label>Telegram-пост (ссылка)</label>
+                <input type="url" id="ar-tg" placeholder="https://t.me/…" />
+              </div>
+            </div>
+
+            <!-- Превью показателей -->
+            <div class="ds" id="ar-preview-block" style="display:none">
+              <div class="ds-title">Предварительный просмотр</div>
+              <div id="ar-preview-content"></div>
+            </div>
+
+            <!-- Нарушение алерт -->
+            <div id="ar-viol-alert" style="display:none;background:var(--red-dim);border:1px solid rgba(207,102,121,.25);padding:11px 14px;font-size:.76rem;color:var(--muted);display:none">
+              <div style="display:flex;align-items:center;gap:8px">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1.5L1 12h12L7 1.5z" stroke="var(--red)" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5.5v3M7 10.5v.5" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <span id="ar-viol-text" style="color:var(--red)"></span>
+              </div>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="ds">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn btn-p" id="ar-submit-btn" style="width:100%;justify-content:center;padding:13px">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 7l3 3 6-6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span id="ar-submit-label">Сохранить отчёт в Firestore</span>
+                </button>
+                <div style="font-size:.64rem;color:var(--muted-2);text-align:center;line-height:1.5">
+                  Отчёт будет добавлен в коллекцию <code style="color:var(--accent)">/reports</code> с UID выбранного сборщика
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /правая колонка -->
+
+        </div><!-- /grid -->
+
+        <!-- История добавленных вручную -->
+        <div style="margin-top:24px">
+          <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+            Добавленные вручную в этой сессии
+            <span id="ar-history-count" style="color:var(--muted-2)">0</span>
+          </div>
+          <div id="ar-history" class="row-list">
+            <div class="empty" style="padding:20px;text-align:center;font-size:.76rem;color:var(--muted-2)">Ещё ничего не добавлено</div>
+          </div>
         </div>
 
       </div>
@@ -2600,6 +2815,7 @@
     const BC_LABELS = {
       dash:'Дашборд', reports:'Отчёты', analytics:'Аналитика',
       workers:'Сборщики', 'worker-reports':'Все отчёты сборщиков',
+      'add-report':'Добавить отчёт',
       news:'Новости', team:'Команда', careers:'Вакансии',
       settings:'Настройки', profile:'Мой профиль'
     };
@@ -2618,6 +2834,7 @@
       if (pageId === 'workers')        loadWorkers();
       if (pageId === 'worker-reports') loadAllWorkerReports();
       if (pageId === 'news')           loadNews();
+      if (pageId === 'add-report')     initAddReport();
     }
 
     function updateProfileStats() {
@@ -3949,6 +4166,241 @@
         toast('Статья удалена', 'err');
       } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
     });
+
+    /* ══════════════════════════════════════════════════════════
+       ДОБАВИТЬ ОТЧЁТ ВРУЧНУЮ
+    ══════════════════════════════════════════════════════════ */
+    const CORR_NORM_AR  = 4;
+    const SPEED_NORM_AR = 38;
+    let arHistory   = [];  /* отчёты добавленные в этой сессии */
+    let arInitDone  = false;
+
+    function initAddReport() {
+      /* Ставим сегодняшнюю дату по умолчанию */
+      const dateInp = document.getElementById('ar-date');
+      if (dateInp && !dateInp.value) dateInp.value = new Date().toISOString().slice(0,10);
+
+      /* Наполняем select сборщиками из уже загруженного allWorkers */
+      fillWorkerSelect();
+
+      if (arInitDone) return;
+      arInitDone = true;
+
+      /* Выбор из списка → заполняем имя и uid */
+      const sel = document.getElementById('ar-worker-select');
+      if (sel) {
+        sel.addEventListener('change', () => {
+          const uid  = sel.value;
+          const nameInp = document.getElementById('ar-worker-name');
+          const uidInp  = document.getElementById('ar-worker-uid');
+          if (!uid) { if (nameInp) nameInp.value = ''; if (uidInp) uidInp.value = ''; return; }
+          const w = allWorkers.find(x => x._id === uid);
+          if (w && nameInp) nameInp.value = w.displayName || w.email?.split('@')[0] || '';
+          if (uidInp) uidInp.value = uid;
+        });
+      }
+
+      /* Ввод имени вручную → генерируем uid */
+      const nameInp = document.getElementById('ar-worker-name');
+      const uidInp  = document.getElementById('ar-worker-uid');
+      if (nameInp) {
+        nameInp.addEventListener('input', () => {
+          /* Только если select не выбран */
+          const selEl = document.getElementById('ar-worker-select');
+          if (selEl && selEl.value) return;
+          const slug = nameInp.value.trim()
+            .toLowerCase()
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zа-яё0-9_]/gi, '')
+            .slice(0, 32);
+          if (uidInp) uidInp.value = slug ? 'manual_' + slug : '';
+        });
+      }
+
+      /* Live-расчёт нарушений при вводе */
+      ['ar-corr','ar-speed'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', updateArViolAlert);
+      });
+
+      /* Сброс формы */
+      document.getElementById('ar-reset-btn')?.addEventListener('click', resetArForm);
+
+      /* Отправка */
+      document.getElementById('ar-submit-btn')?.addEventListener('click', submitAddReport);
+    }
+
+    function fillWorkerSelect() {
+      const sel = document.getElementById('ar-worker-select');
+      if (!sel) return;
+      const currentVal = sel.value;
+      while (sel.options.length > 0) sel.remove(0);
+      const placeholder = new Option('— Выбрать из базы —', '');
+      sel.add(placeholder);
+      allWorkers.forEach(w => {
+        const label = (w.displayName || w.email || w._id.slice(0,12)) + (w.email ? ' · ' + w.email.split('@')[0] : '');
+        sel.add(new Option(label, w._id));
+      });
+      if (currentVal) sel.value = currentVal;
+    }
+
+    function updateArViolAlert() {
+      const corr  = parseFloat(document.getElementById('ar-corr')?.value  || '0') || 0;
+      const speed = parseFloat(document.getElementById('ar-speed')?.value || '0') || 0;
+      const alertEl = document.getElementById('ar-viol-alert');
+      const textEl  = document.getElementById('ar-viol-text');
+      if (!alertEl || !textEl) return;
+
+      const parts = [];
+      if (corr  > CORR_NORM_AR)  parts.push('Корр. ' + corr.toFixed(1)  + '% > ' + CORR_NORM_AR  + '%');
+      if (speed > SPEED_NORM_AR) parts.push('Скор. ' + speed + 'с > ' + SPEED_NORM_AR + 'с');
+
+      if (parts.length) {
+        textEl.textContent = '⚠ Нарушение: ' + parts.join(' · ');
+        alertEl.style.display = '';
+      } else {
+        alertEl.style.display = 'none';
+      }
+    }
+
+    function resetArForm() {
+      const ids = [
+        'ar-worker-name','ar-worker-uid','ar-address',
+        'ar-arr-time','ar-arr-photo','ar-arr-note',
+        'ar-dep-time','ar-dep-photo-tsd','ar-dep-photo-s1','ar-dep-photo-s2','ar-dep-note',
+        'ar-positions','ar-orders','ar-corr','ar-speed','ar-tg'
+      ];
+      ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const sel = document.getElementById('ar-worker-select');
+      if (sel) sel.value = '';
+      const dateInp = document.getElementById('ar-date');
+      if (dateInp) dateInp.value = new Date().toISOString().slice(0,10);
+      const alertEl = document.getElementById('ar-viol-alert');
+      if (alertEl) alertEl.style.display = 'none';
+    }
+
+    async function submitAddReport() {
+      /* Валидация */
+      const workerName = document.getElementById('ar-worker-name')?.value.trim();
+      const uid        = document.getElementById('ar-worker-uid')?.value.trim();
+      const date       = document.getElementById('ar-date')?.value;
+      const address    = document.getElementById('ar-address')?.value.trim();
+      const arrTime    = document.getElementById('ar-arr-time')?.value;
+      const depTime    = document.getElementById('ar-dep-time')?.value;
+
+      const errors = [];
+      if (!workerName) errors.push('ar-worker-name');
+      if (!date)       errors.push('ar-date');
+      if (!address)    errors.push('ar-address');
+      if (!arrTime)    errors.push('ar-arr-time');
+      if (!depTime)    errors.push('ar-dep-time');
+
+      if (errors.length) {
+        errors.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.borderColor = 'rgba(207,102,121,.6)'; setTimeout(() => el.style.borderColor = '', 2000); }
+        });
+        toast('Заполните обязательные поля', 'err');
+        return;
+      }
+
+      const corrVal  = parseFloat(document.getElementById('ar-corr')?.value  || '0') || 0;
+      const speedVal = parseFloat(document.getElementById('ar-speed')?.value || '0') || 0;
+      const finalUid = uid || 'manual_' + (workerName.toLowerCase().replace(/\s+/g,'_').replace(/[^a-zа-яё0-9_]/gi,'').slice(0,32));
+
+      const reportData = {
+        uid:        finalUid,
+        workerName: workerName,
+        date, address,
+        arrival: {
+          time:      arrTime,
+          photo_tsd: document.getElementById('ar-arr-photo')?.value.trim() || null,
+          note:      document.getElementById('ar-arr-note')?.value.trim()  || null,
+        },
+        departure: {
+          time:          depTime,
+          photo_tsd:     document.getElementById('ar-dep-photo-tsd')?.value.trim() || null,
+          photo_stats1:  document.getElementById('ar-dep-photo-s1')?.value.trim()  || null,
+          photo_stats2:  document.getElementById('ar-dep-photo-s2')?.value.trim()  || null,
+          note:          document.getElementById('ar-dep-note')?.value.trim()       || null,
+        },
+        stats: {
+          positions:        parseInt(document.getElementById('ar-positions')?.value || '0') || 0,
+          orders:           parseInt(document.getElementById('ar-orders')?.value    || '0') || 0,
+          correction_pct:   corrVal,
+          avg_position_sec: speedVal,
+        },
+        telegram_post: document.getElementById('ar-tg')?.value.trim() || null,
+        isViolation:   (corrVal > CORR_NORM_AR) || (speedVal > SPEED_NORM_AR),
+        addedByAdmin:  true,   /* маркер ручного добавления */
+        createdAt:     serverTimestamp(),
+        updatedAt:     serverTimestamp(),
+      };
+
+      /* Удаляем null поля */
+      function cleanNulls(obj) {
+        Object.keys(obj).forEach(k => {
+          if (obj[k] === null || obj[k] === '') delete obj[k];
+          else if (typeof obj[k] === 'object' && !Array.isArray(obj[k]) && !(obj[k] instanceof Object && obj[k].constructor.name === 'Object' === false)) {
+            cleanNulls(obj[k]);
+          }
+        });
+      }
+      cleanNulls(reportData);
+
+      const btn = document.getElementById('ar-submit-btn');
+      const lbl = document.getElementById('ar-submit-label');
+      if (btn) btn.disabled = true;
+      if (lbl) lbl.textContent = 'Сохранение…';
+
+      try {
+        const ref = await addDoc(collection(fdb, 'reports'), reportData);
+
+        /* Добавляем в историю сессии */
+        arHistory.unshift({ _id: ref.id, ...reportData, createdAt: new Date() });
+        renderArHistory();
+
+        toast('Отчёт добавлен · ID: ' + ref.id.slice(0,8) + '…', 'ok');
+        resetArForm();
+
+        /* Обновляем кэш отчётов если worker-reports уже загружен */
+        if (allWorkerRpts.length > 0) {
+          allWorkerRpts.unshift({ _id: ref.id, ...reportData });
+          renderWorkerReports();
+        }
+      } catch(e) {
+        toast('Ошибка: ' + e.message, 'err');
+      } finally {
+        if (btn) btn.disabled = false;
+        if (lbl) lbl.textContent = 'Сохранить отчёт в Firestore';
+      }
+    }
+
+    function renderArHistory() {
+      const el    = document.getElementById('ar-history');
+      const count = document.getElementById('ar-history-count');
+      if (count) count.textContent = arHistory.length;
+      if (!el) return;
+      if (!arHistory.length) {
+        el.innerHTML = '<div class="empty" style="padding:20px;text-align:center;font-size:.76rem;color:var(--muted-2)">Ещё ничего не добавлено</div>';
+        return;
+      }
+      const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+      el.innerHTML = arHistory.map(r => {
+        const d   = new Date(r.date + 'T00:00:00');
+        const viol= r.isViolation;
+        return '<div class="row-item has-accent ' + (viol?'accent-red':'accent-green') + '" style="grid-template-columns:72px 1fr auto;gap:12px">' +
+          '<div style="font-family:var(--font-display);font-weight:700;font-size:.66rem;color:var(--muted)"><strong style="display:block;font-size:1rem;color:#fff;line-height:1">' + d.getDate() + '</strong>' + MONTHS[d.getMonth()] + '</div>' +
+          '<div style="min-width:0">' +
+            '<div style="font-size:.82rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.address||'—') + '</div>' +
+            '<div style="font-size:.68rem;color:var(--accent);margin-top:2px">' + esc(r.workerName||'—') + '</div>' +
+            '<div style="font-size:.64rem;color:var(--muted-2);margin-top:1px">UID: ' + esc(r.uid||'—') + '</div>' +
+          '</div>' +
+          (viol
+            ? '<span class="pill pill-red"><span class="pill-dot"></span>Нарушение</span>'
+            : '<span class="pill pill-green"><span class="pill-dot"></span>ОК</span>') +
+        '</div>';
+      }).join('');
+    }
 
     window._dash = { toast, refreshAll };
 
