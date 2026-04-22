@@ -108,39 +108,57 @@
       display: flex; flex-direction: column;
       overflow-y: auto; overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      /* Тонкая подсветка правого края */
+      box-shadow: inset -1px 0 0 var(--border);
+    }
+    /* Фоновый радиальный акцент в sidebar */
+    .sidebar::before {
+      content: ''; position: absolute; top: 0; left: 0; width: var(--sidebar-w); height: 240px;
+      background: radial-gradient(ellipse 180% 140% at 50% -20%, rgba(200,169,110,.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
     }
 
     /* Логотип */
     .sb-logo {
-      padding: 0 18px;
+      padding: 0 16px;
       height: var(--topbar-h);
       display: flex; align-items: center; gap: 10px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
+      position: relative; z-index: 1;
     }
     .sb-logo-mark {
-      width: 28px; height: 28px; flex-shrink: 0;
-      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; flex-shrink: 0;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      box-shadow: 0 0 16px rgba(200,169,110,.2);
     }
     .sb-logo-mark svg { flex-shrink: 0; }
     .sb-logo-text {
       font-family: var(--font-display); font-weight: 800;
-      font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text);
-      line-height: 1;
+      font-size: .84rem; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--text); line-height: 1;
     }
-    .sb-logo-sub { font-size: .55rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+    .sb-logo-sub {
+      font-size: .5rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--accent); margin-top: 3px; opacity: .7;
+    }
 
     /* Навигация */
-    .sb-nav { flex: 1; padding: 14px 0; }
-    .sb-section { margin-bottom: 4px; }
+    .sb-nav { flex: 1; padding: 10px 0; position: relative; z-index: 1; }
+    .sb-section { margin-bottom: 2px; }
     .sb-section-label {
-      font-size: .52rem; letter-spacing: .26em; text-transform: uppercase;
-      color: var(--muted-2); padding: 10px 18px 5px;
-      display: block;
+      font-size: .5rem; letter-spacing: .3em; text-transform: uppercase;
+      color: var(--muted-3); padding: 12px 18px 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sb-section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
     }
     .sb-link {
       display: flex; align-items: center; gap: 9px;
-      padding: 8px 18px; font-size: .76rem; font-weight: 400;
+      padding: 7px 18px; font-size: .74rem; font-weight: 300;
       letter-spacing: .02em; color: var(--muted);
       transition: color var(--tf), background var(--tf);
       position: relative; white-space: nowrap; overflow: hidden;
@@ -152,52 +170,61 @@
     }
     .sb-link.active::before {
       content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-      width: 2px; background: var(--accent);
+      width: 2px;
+      background: linear-gradient(180deg, transparent, var(--accent), transparent);
     }
-    .sb-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: .7; }
+    .sb-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: .5; transition: opacity var(--tf); }
+    .sb-link:hover .sb-icon { opacity: .8; }
     .sb-link.active .sb-icon { opacity: 1; }
     .sb-badge {
-      margin-left: auto; font-size: .52rem; letter-spacing: .1em;
-      background: var(--red); color: #fff; border-radius: 20px;
-      padding: 1px 6px; flex-shrink: 0;
+      margin-left: auto; font-size: .5rem; letter-spacing: .06em;
+      background: var(--red); color: #fff;
+      padding: 1px 6px; flex-shrink: 0; min-width: 18px; text-align: center;
     }
-    .sb-badge.green { background: var(--green); }
+    .sb-badge.green  { background: var(--green); }
     .sb-badge.yellow { background: var(--yellow); color: #0a0a0f; }
 
     /* Низ сайдбара — юзер */
     .sb-user {
-      border-top: 1px solid var(--border); padding: 12px 14px;
+      border-top: 1px solid var(--border); padding: 10px 12px;
       display: flex; align-items: center; gap: 10px;
-      flex-shrink: 0;
+      flex-shrink: 0; position: relative; z-index: 1;
+      background: var(--bg);
     }
     .sb-avatar {
-      width: 30px; height: 30px; flex-shrink: 0;
+      width: 32px; height: 32px; flex-shrink: 0;
       background: var(--accent-dim); border: 1px solid var(--accent-mid);
       display: flex; align-items: center; justify-content: center;
       font-family: var(--font-display); font-weight: 800;
-      font-size: .68rem; color: var(--accent);
+      font-size: .7rem; color: var(--accent);
     }
     .sb-user-info { flex: 1; min-width: 0; }
-    .sb-user-name { font-size: .74rem; color: var(--text); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sb-user-role { font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
+    .sb-user-name { font-size: .76rem; color: var(--text); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-user-role { font-size: .56rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); margin-top: 1px; }
     .sb-logout {
       width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
       background: none; border: 1px solid var(--border); color: var(--muted-2); flex-shrink: 0;
-      transition: border-color var(--tf), color var(--tf);
+      transition: border-color var(--tf), color var(--tf), background var(--tf);
     }
-    .sb-logout:hover { border-color: var(--border-h); color: var(--red); }
+    .sb-logout:hover { border-color: rgba(208,96,112,.35); color: var(--red); background: var(--red-dim); }
 
     /* ═══════════════════════════════════════════════════════════════
        TOPBAR
     ═══════════════════════════════════════════════════════════════ */
     .topbar {
       grid-area: topbar;
-      background: rgba(8,8,13,.98);
+      background: rgba(8,8,13,.97);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       padding-inline: 24px; gap: 12px;
-      /* position: sticky не работает в CSS Grid — topbar уже фиксирован сеткой */
       z-index: 100; min-width: 0;
+      position: relative;
+    }
+    .topbar::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(200,169,110,.12) 50%, transparent);
+      pointer-events: none;
     }
     .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
     /* Мобильный гамбургер */
@@ -362,11 +389,13 @@
     .card {
       background: var(--surface); border: 1px solid var(--border);
       position: relative; overflow: hidden;
+      transition: border-color var(--tf);
     }
+    .card:hover { border-color: var(--border-h); }
     .card-pad { padding: 18px 20px; }
     .card-accent::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--accent), transparent 60%);
+      background: linear-gradient(90deg, var(--accent), rgba(200,169,110,.15) 70%, transparent);
     }
 
     /* Поля формы */
@@ -402,17 +431,27 @@
     ═══════════════════════════════════════════════════════════════ */
     .kpi {
       background: var(--surface); border: 1px solid var(--border);
-      padding: 16px 20px; position: relative; overflow: hidden;
-      transition: border-color var(--t);
+      padding: 18px 20px; position: relative; overflow: hidden;
+      transition: border-color var(--t), background var(--t), transform var(--t);
     }
-    .kpi:hover { border-color: var(--border-h); }
+    .kpi::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent);
+      pointer-events: none;
+    }
+    .kpi:hover {
+      border-color: var(--border-h);
+      background: var(--surface-2);
+      transform: translateY(-1px);
+    }
     .kpi__label {
-      font-size: .57rem; letter-spacing: .2em; text-transform: uppercase;
-      color: var(--muted-2); margin-bottom: 8px;
+      font-size: .54rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--muted-2); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
     }
     .kpi__val {
       font-family: var(--font-display); font-weight: 800;
-      font-size: clamp(1.6rem, 3vw, 2.2rem); color: #fff;
+      font-size: clamp(1.5rem, 2.8vw, 2rem); color: #fff;
       line-height: 1; letter-spacing: -.02em;
     }
     .kpi__val em { color: var(--accent); font-style: normal; }
@@ -420,15 +459,26 @@
     .kpi__val.red    { color: var(--red); }
     .kpi__val.yellow { color: var(--yellow); }
     .kpi__delta {
-      margin-top: 8px; font-size: .62rem; color: var(--muted);
+      margin-top: 9px; font-size: .6rem; color: var(--muted);
       display: flex; align-items: center; gap: 4px;
     }
     .kpi__delta.up   { color: var(--green); }
     .kpi__delta.down { color: var(--red); }
     .kpi__icon {
-      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-      opacity: .07; pointer-events: none;
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      opacity: .05; pointer-events: none;
     }
+    /* Прогресс-бар под KPI */
+    .kpi__bar {
+      margin-top: 12px; height: 2px; background: var(--surface-3);
+      overflow: hidden;
+    }
+    .kpi__bar-fill {
+      height: 100%; background: var(--accent);
+      transition: width .6s var(--ease);
+    }
+    .kpi__bar-fill.green  { background: var(--green); }
+    .kpi__bar-fill.red    { background: var(--red); }
 
     /* Мини-спарклайн */
     .kpi__spark { margin-top: 10px; }
@@ -581,30 +631,32 @@
        ТОСТ
     ═══════════════════════════════════════════════════════════════ */
     .toast {
-      position: fixed; bottom: 20px; right: 20px; z-index: 999;
-      background: var(--surface-2); border: 1px solid var(--border);
-      padding: 10px 18px; font-size: .76rem;
-      display: flex; align-items: center; gap: 9px; max-width: 300px;
-      transform: translateY(60px) scale(.95); opacity: 0;
-      transition: transform .25s var(--ease), opacity .2s ease;
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--surface-3); border: 1px solid var(--border-h);
+      padding: 11px 18px; font-size: .74rem;
+      display: flex; align-items: center; gap: 10px; max-width: 320px;
+      transform: translateY(64px) scale(.96); opacity: 0;
+      transition: transform .28s var(--ease), opacity .22s ease;
       pointer-events: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
     .toast.show { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
-    .toast.ok   { border-color: rgba(76,175,130,.3); }
-    .toast.err  { border-color: rgba(208,96,112,.3); }
-    .toast-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .toast.ok  .toast-dot { background: var(--green); }
-    .toast.err .toast-dot { background: var(--red); }
+    .toast.ok  { border-color: rgba(76,175,130,.35); }
+    .toast.err { border-color: rgba(208,96,112,.35); }
+    .toast-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .toast.ok  .toast-dot { background: var(--green); box-shadow: 0 0 8px rgba(76,175,130,.5); }
+    .toast.err .toast-dot { background: var(--red);   box-shadow: 0 0 8px rgba(208,96,112,.5); }
 
     /* ═══════════════════════════════════════════════════════════════
        ПУСТОЕ СОСТОЯНИЕ
     ═══════════════════════════════════════════════════════════════ */
     .empty {
-      text-align: center; padding: 52px 24px;
+      text-align: center; padding: 48px 24px;
       color: var(--muted); font-size: .82rem;
-      border: 1px dashed var(--border); background: var(--surface);
+      border: 1px dashed rgba(255,255,255,.05); background: var(--surface);
     }
-    .empty svg { display: block; margin: 0 auto 14px; opacity: .18; }
+    .empty svg { display: block; margin: 0 auto 14px; opacity: .14; }
+    .empty p { color: var(--muted-2); font-size: .76rem; line-height: 1.6; }
 
     /* ═══════════════════════════════════════════════════════════════
        JSON-БЛОК (экспорт)
@@ -625,16 +677,19 @@
 
     /* Активность / простая диаграмма */
     .activity-bars {
-      display: flex; align-items: flex-end; gap: 3px; height: 60px; margin-top: 14px;
+      display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 14px;
     }
     .ab {
-      flex: 1; background: var(--surface-2);
-      transition: background var(--tf);
+      flex: 1; background: var(--surface-3);
+      transition: background var(--tf), transform var(--tf);
       position: relative; cursor: default;
+      border-radius: 1px 1px 0 0;
     }
-    .ab:hover { background: var(--accent-dim); }
-    .ab.filled { background: rgba(200,169,110,.25); }
-    .ab.filled:hover { background: rgba(200,169,110,.4); }
+    .ab:hover { background: var(--accent-dim); transform: scaleY(1.04); transform-origin: bottom; }
+    .ab.filled { background: rgba(200,169,110,.22); }
+    .ab.filled:hover { background: rgba(200,169,110,.38); }
+    .ab.today { background: rgba(200,169,110,.35); }
+    .ab.today:hover { background: rgba(200,169,110,.5); }
 
     /* ═══════════════════════════════════════════════════════════════
        СТРАНИЦА: ОТЧЁТЫ
@@ -842,7 +897,43 @@
 <style>
   @keyframes authbar { 0%{width:0%} 50%{width:75%} 100%{width:0%;margin-left:100%} }
   :root { --red-dim: rgba(208,96,112,.10); --border-h: rgba(255,255,255,.13); }
-</style>
+
+    /* Быстрые действия кнопка */
+    .qa-btn {
+      justify-content: flex-start !important;
+      padding: 9px 12px !important;
+      font-size: .72rem !important;
+      width: 100%;
+      transition: border-color var(--tf), color var(--tf), background var(--tf), transform var(--tf) !important;
+    }
+    .qa-btn:hover { border-color: var(--accent-mid) !important; color: var(--accent) !important; transform: translateX(2px); }
+    .qa-btn:hover svg { opacity: .7 !important; }
+  
+    /* ── Унифицированные section headers ── */
+    .sec-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .sec-head-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* ── Row item улучшение — hover accent ── */
+    .row-item[data-id]:hover { border-color: var(--accent-mid); }
+
+    /* ── Топбар кнопка notif пульс ── */
+    .tb-notif-badge { animation: pulse-r 2.5s ease-in-out infinite; }
+    @keyframes pulse-r { 0%,100%{box-shadow:0 0 0 0 rgba(208,96,112,.4)} 50%{box-shadow:0 0 0 4px rgba(208,96,112,0)} }
+
+    /* ── Scroll sidebar тонкий ── */
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--muted-3); border-radius: 2px; }
+    .sidebar::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+    /* ── Content scroll ── */
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--muted-3); border-radius: 2px; }
+  </style>
 
 <!-- ══════════════════════════════════════════════════════════════
      ОБОЛОЧКА ПАНЕЛИ
@@ -894,10 +985,6 @@
           <svg class="sb-icon" viewBox="0 0 15 15" fill="none"><path d="M13 1.5H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-10a1 1 0 0 0-1-1zM1 5.5h13" stroke="currentColor" stroke-width="1.2"/><path d="M4 8.5h3M4 11h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
           Все отчёты
           <span class="sb-badge" id="sb-badge-wr">0</span>
-        </a>
-        <a class="sb-link" data-page="add-report" href="#">
-          <svg class="sb-icon" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="1.5" width="12" height="12" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 4.5v6M4.5 7.5h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-          Добавить отчёт
         </a>
       </div>
 
@@ -954,7 +1041,11 @@
       <button class="topbar-menu-btn" id="menuBtn" aria-label="Меню">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3.5h10M2 7h10M2 10.5h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       </button>
-      <div class="page-breadcrumb">Galelium<span>·</span><span id="bc-page">Дашборд</span></div>
+      <div class="page-breadcrumb" style="display:flex;align-items:center;gap:5px">
+        <span style="color:var(--muted-3)">Galelium</span>
+        <span style="color:var(--muted-3)">·</span>
+        <span id="bc-page" style="color:var(--muted)">Дашборд</span>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="tb-status"><span class="tb-dot"></span><span>Активен</span></div>
@@ -978,39 +1069,54 @@
     <div class="page active" id="page-dash">
       <div class="content-pad">
 
+        <!-- Шапка дашборда -->
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap">
           <div>
-            <span class="eyebrow">Galelium Corporation · Операционный центр</span>
-            <div class="section-title">Дашборд</div>
+            <span class="eyebrow">Операционный центр · Galelium</span>
+            <div class="section-title" style="margin-top:4px">Дашборд</div>
           </div>
-          <div style="text-align:right">
-            <div id="dash-date" style="font-size:.7rem;color:var(--muted)"></div>
-            <div id="dash-time" style="font-family:var(--font-display);font-weight:800;font-size:1.4rem;color:var(--accent);letter-spacing:-.02em;line-height:1.1"></div>
+          <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+            <div id="dash-date" style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2)"></div>
+            <div id="dash-time" style="font-family:var(--font-display);font-weight:800;font-size:1.6rem;color:var(--accent);letter-spacing:-.03em;line-height:1"></div>
           </div>
         </div>
 
         <!-- КПЭ -->
         <div class="dash-kpis">
           <div class="kpi card-accent">
-            <div class="kpi__label">Всего отчётов</div>
+            <div class="kpi__label">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3.5 4.5h5M3.5 6.5h3.5M3.5 8.5h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+              Всего отчётов
+            </div>
             <div class="kpi__val" id="d-total">—</div>
-            <div class="kpi__delta">Все смены</div>
-            <div class="kpi__icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="white" stroke-width="1.2"/><path d="M7 8h10M7 12h7M7 16h5" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <div class="kpi__delta">все смены в базе</div>
+            <div class="kpi__icon"><svg width="52" height="52" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="white" stroke-width="1.2"/><path d="M7 8h10M7 12h7M7 16h5" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg></div>
           </div>
           <div class="kpi">
-            <div class="kpi__label">В этом месяце</div>
+            <div class="kpi__label">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="1.5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3.5 6l2 2L8.5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              В этом месяце
+            </div>
             <div class="kpi__val green" id="d-month">—</div>
-            <div class="kpi__delta" id="d-month-name">Текущий период</div>
+            <div class="kpi__delta" id="d-month-name">текущий период</div>
+            <div class="kpi__bar" id="d-month-bar" style="display:none"><div class="kpi__bar-fill green" id="d-month-bar-fill" style="width:0%"></div></div>
           </div>
           <div class="kpi">
-            <div class="kpi__label">Нарушений</div>
+            <div class="kpi__label">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1.5L1 10h10L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5v3M6 9.2v.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              Нарушений
+            </div>
             <div class="kpi__val red" id="d-viol">—</div>
-            <div class="kpi__delta">Корр. &gt;4% или скор. &gt;38с</div>
+            <div class="kpi__delta">корр. &gt;4% · скор. &gt;38с</div>
+            <div class="kpi__bar" id="d-viol-bar" style="display:none"><div class="kpi__bar-fill red" id="d-viol-bar-fill" style="width:0%"></div></div>
           </div>
           <div class="kpi">
-            <div class="kpi__label">Позиций собрано</div>
+            <div class="kpi__label">
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 9l2.5-3.5 2.5 2 3.5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Позиций собрано
+            </div>
             <div class="kpi__val" id="d-pos">—</div>
-            <div class="kpi__delta">За все смены</div>
+            <div class="kpi__delta">сумма всех смен</div>
           </div>
         </div>
 
@@ -1037,23 +1143,35 @@
             </div>
 
             <div class="card card-pad">
-              <div style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-bottom:10px">Быстрые действия</div>
-              <div style="display:flex;flex-direction:column;gap:5px">
-                <button class="btn" data-page="worker-reports" style="justify-content:flex-start;padding:9px 11px;font-size:.72rem">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="2" y="1.5" width="10" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5h5M4.5 7.5h3.5M4.5 10h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
-                  Все отчёты сборщиков
+              <div style="font-size:.54rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-2);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+                Быстрые действия
+                <span style="flex:1;height:1px;background:var(--border)"></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <button class="btn qa-btn" data-page="worker-reports">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="2" y="1.5" width="10" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5h5M4.5 7.5h3.5M4.5 10h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                  <span style="flex:1;text-align:left">Все отчёты сборщиков</span>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none" style="opacity:.3"><path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <button class="btn" data-page="workers" style="justify-content:flex-start;padding:9px 11px;font-size:.72rem">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  Список сборщиков
+                <button class="btn qa-btn" data-page="workers">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  <span style="flex:1;text-align:left">Список сборщиков</span>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none" style="opacity:.3"><path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <button class="btn" data-page="analytics" style="justify-content:flex-start;padding:9px 11px;font-size:.72rem">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M1.5 11l3-3.5 3 2 4-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="1.5" y="1.5" width="11" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
-                  Аналитика
+                <button class="btn qa-btn" data-page="analytics">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M1.5 11l3-3.5 3 2 4-5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="1.5" y="1.5" width="11" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+                  <span style="flex:1;text-align:left">Аналитика</span>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none" style="opacity:.3"><path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
-                <a href="https://galelium.com/reports.html" target="_blank" class="btn" style="justify-content:flex-start;padding:9px 11px;font-size:.72rem;text-decoration:none">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M6 2.5H2.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9M9 1.5h4.5M13.5 1.5V6M7.5 7.5l6-6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  Публичные отчёты
+                <a href="https://galelium.com/reports.html" target="_blank" class="btn qa-btn" style="text-decoration:none">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M6 2.5H2.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9M9 1.5h4.5M13.5 1.5V6M7.5 7.5l6-6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span style="flex:1;text-align:left">Публичный рейтинг</span>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none" style="opacity:.3"><path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <a href="https://galelium.com/workers.html" target="_blank" class="btn qa-btn" style="text-decoration:none">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 2h10M3.5 2v10M10.5 2v10M2 12h10M2 7h10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+                  <span style="flex:1;text-align:left">Рейтинг сборщиков</span>
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none" style="opacity:.3"><path d="M2 5h6M5 2l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
               </div>
             </div>
@@ -1677,223 +1795,6 @@
       </div>
     </div>
 
-    <!-- ╔══════════════════════════════════
-         ║ ДОБАВИТЬ ОТЧЁТ ОТ ИМЕНИ СБОРЩИКА
-         ╚════════════════════════════════ -->
-    <div class="page" id="page-add-report">
-      <div class="content-pad">
-
-        <!-- Шапка -->
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap">
-          <div>
-            <span class="eyebrow">Firestore · /reports · от имени сборщика</span>
-            <div class="section-title">Добавить отчёт</div>
-            <div style="font-size:.76rem;color:var(--muted);margin-top:6px;max-width:520px;line-height:1.6">
-              Выберите аккаунт из базы — отчёт сохранится с настоящим <code style="color:var(--accent);font-size:.7rem">uid</code> и будет неотличим от обычных.
-            </div>
-          </div>
-          <button class="btn" id="ar-reset-btn">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M10 6A4 4 0 0 1 2.5 9M2 6a4 4 0 0 1 7.5-3M10.5 3l-.5 3-3-.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Очистить форму
-          </button>
-        </div>
-
-        <!-- Выбор сборщика (крупный) -->
-        <div class="ds" style="margin-bottom:2px">
-          <div class="ds-title">
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1 13c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            Аккаунт сборщика
-          </div>
-          <div id="ar-worker-cards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-            <div style="font-size:.76rem;color:var(--muted-2)">Загрузка сборщиков…</div>
-          </div>
-          <!-- Выбранный сборщик -->
-          <div id="ar-selected-worker" style="display:none;background:var(--surface-3);border:1px solid var(--accent-mid);padding:12px 16px;display:none">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div id="ar-sel-av" style="width:36px;height:36px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:.9rem;color:var(--accent);flex-shrink:0"></div>
-              <div>
-                <div id="ar-sel-name" style="font-size:.88rem;color:#fff;font-weight:400"></div>
-                <div id="ar-sel-meta" style="font-size:.68rem;color:var(--muted);margin-top:2px"></div>
-              </div>
-              <button id="ar-sel-clear" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);font-size:.64rem;padding:4px 10px;cursor:pointer;transition:border-color var(--tf),color var(--tf)" onmouseover="this.style.borderColor='var(--border-h)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-                Сменить
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Форма (скрыта до выбора) -->
-        <div id="ar-form-wrap" style="display:none">
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;max-width:900px">
-
-            <!-- ── ЛЕВАЯ КОЛОНКА ── -->
-            <div style="display:flex;flex-direction:column;gap:2px">
-
-              <!-- Дата + Адрес -->
-              <div class="ds">
-                <div class="ds-title">
-                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  Смена
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div class="field">
-                    <label>Дата <span style="color:var(--accent)">*</span></label>
-                    <input type="date" id="ar-date" />
-                  </div>
-                  <div class="field">
-                    <label>Адрес объекта <span style="color:var(--accent)">*</span></label>
-                    <input type="text" id="ar-address" placeholder="ул. Ленина 5, Склад" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Приход -->
-              <div class="ds">
-                <div class="ds-title" style="display:flex;align-items:center;gap:7px">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:block;flex-shrink:0"></span>
-                  Приход
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div class="field">
-                    <label>Время прихода <span style="color:var(--accent)">*</span></label>
-                    <input type="time" id="ar-arr-time" />
-                  </div>
-                  <div class="field">
-                    <label>Фото ТСД (ссылка)</label>
-                    <input type="url" id="ar-arr-photo" placeholder="https://…" />
-                  </div>
-                </div>
-                <div class="field" style="margin-top:10px">
-                  <label>Заметка</label>
-                  <textarea id="ar-arr-note" style="min-height:56px;resize:vertical" placeholder="Примечания…"></textarea>
-                </div>
-              </div>
-
-              <!-- Уход -->
-              <div class="ds">
-                <div class="ds-title" style="display:flex;align-items:center;gap:7px">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:block;flex-shrink:0"></span>
-                  Уход
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div class="field">
-                    <label>Время ухода <span style="color:var(--accent)">*</span></label>
-                    <input type="time" id="ar-dep-time" />
-                  </div>
-                  <div class="field">
-                    <label>Фото ТСД уход</label>
-                    <input type="url" id="ar-dep-photo-tsd" placeholder="https://…" />
-                  </div>
-                  <div class="field">
-                    <label>Статистика 1</label>
-                    <input type="url" id="ar-dep-photo-s1" placeholder="https://…" />
-                  </div>
-                  <div class="field">
-                    <label>Статистика 2</label>
-                    <input type="url" id="ar-dep-photo-s2" placeholder="https://…" />
-                  </div>
-                </div>
-                <div class="field" style="margin-top:10px">
-                  <label>Заметка</label>
-                  <textarea id="ar-dep-note" style="min-height:56px;resize:vertical" placeholder="Примечания…"></textarea>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- ── ПРАВАЯ КОЛОНКА ── -->
-            <div style="display:flex;flex-direction:column;gap:2px">
-
-              <!-- Показатели -->
-              <div class="ds">
-                <div class="ds-title">
-                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M1 9.5l2.5-3.5 3 2 3.5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  Показатели
-                  <span style="font-size:.6rem;color:var(--muted-2);font-weight:300;letter-spacing:0;text-transform:none">— оставь пустым если неизвестно</span>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div class="field">
-                    <label>Позиций</label>
-                    <input type="number" id="ar-positions" placeholder="—" min="0" />
-                  </div>
-                  <div class="field">
-                    <label>Заказов</label>
-                    <input type="number" id="ar-orders" placeholder="—" min="0" />
-                  </div>
-                  <div class="field">
-                    <label>Корректировки %</label>
-                    <input type="number" id="ar-corr" placeholder="—" min="0" step="0.1" />
-                    <div class="field-hint" id="ar-corr-hint">Норма ≤ 4% · пусто = не учитывается</div>
-                  </div>
-                  <div class="field">
-                    <label>Ср. скорость, сек</label>
-                    <input type="number" id="ar-speed" placeholder="—" min="0" />
-                    <div class="field-hint" id="ar-speed-hint">Норма ≤ 38 с · пусто = не учитывается</div>
-                  </div>
-                </div>
-                <div class="field" style="margin-top:10px">
-                  <label>Telegram-пост</label>
-                  <input type="url" id="ar-tg" placeholder="https://t.me/…" />
-                </div>
-              </div>
-
-              <!-- Нарушение-алерт -->
-              <div id="ar-viol-alert" style="display:none;background:var(--red-dim);border:1px solid rgba(207,102,121,.25);padding:11px 14px">
-                <div style="display:flex;align-items:center;gap:8px;font-size:.76rem">
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><path d="M7 1.5L1 12h12L7 1.5z" stroke="var(--red)" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5.5v3M7 10.5v.5" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  <span id="ar-viol-text" style="color:var(--red)"></span>
-                </div>
-              </div>
-
-              <!-- Превью длительности -->
-              <div id="ar-duration-preview" style="display:none;background:var(--surface-2);border:1px solid var(--border);padding:12px 14px">
-                <div style="font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px">Сводка смены</div>
-                <div style="display:flex;gap:20px;flex-wrap:wrap">
-                  <div>
-                    <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:#fff" id="ar-dur-val">—</div>
-                    <div style="font-size:.6rem;color:var(--muted-2);margin-top:2px">Длительность</div>
-                  </div>
-                  <div>
-                    <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem" id="ar-corr-preview">—</div>
-                    <div style="font-size:.6rem;color:var(--muted-2);margin-top:2px">Корр. %</div>
-                  </div>
-                  <div>
-                    <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem" id="ar-speed-preview">—</div>
-                    <div style="font-size:.6rem;color:var(--muted-2);margin-top:2px">Скор. с</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Кнопка -->
-              <div class="ds" style="margin-top:auto">
-                <button class="btn btn-p" id="ar-submit-btn" style="width:100%;justify-content:center;padding:14px;font-size:.74rem">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 7l3 3 6-6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  <span id="ar-submit-label">Сохранить отчёт</span>
-                </button>
-                <div style="margin-top:8px;font-size:.62rem;color:var(--muted-2);text-align:center;line-height:1.5">
-                  Сохранится в <code style="color:var(--accent)">/reports</code> с UID выбранного аккаунта · пустые поля не записываются
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- История сессии -->
-          <div style="margin-top:20px">
-            <div style="font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-              Добавлено в этой сессии
-              <span id="ar-history-count" style="background:var(--surface-2);padding:1px 8px;font-size:.64rem">0</span>
-            </div>
-            <div id="ar-history" class="row-list">
-              <div style="padding:16px;text-align:center;font-size:.74rem;color:var(--muted-2)">Ещё ничего не добавлено</div>
-            </div>
-          </div>
-
-        </div><!-- /ar-form-wrap -->
-
-      </div>
-    </div>
   </main><!-- /content -->
 </div><!-- /shell -->
 
@@ -2610,9 +2511,15 @@
       const pos   = reports.reduce((s, r) => s + (r.stats && r.stats.positions ? r.stats.positions : 0), 0);
 
       setText('d-total',      reports.length);
-      setText('d-month',      inMonth.length);
+      setText('d-month', inMonth.length);
+      /* KPI bar — месяц vs всего */
+      const barM = document.getElementById('d-month-bar'), barMF = document.getElementById('d-month-bar-fill');
+      if(barM && reports.length > 0) { barM.style.display=''; barMF.style.width=Math.min(100,Math.round(inMonth.length/reports.length*100))+'%'; }
       setText('d-month-name', 'В ' + MONTHS_F[now.getMonth()]);
-      setText('d-viol',       viols);
+      setText('d-viol', viols);
+      /* KPI bar — нарушения */
+      const barV = document.getElementById('d-viol-bar'), barVF = document.getElementById('d-viol-bar-fill');
+      if(barV && reports.length > 0) { barV.style.display=''; barVF.style.width=Math.min(100,Math.round(viols/reports.length*100))+'%'; }
       setText('d-pos',        pos.toLocaleString('ru'));
 
       /* Последние 5 */
@@ -2821,7 +2728,6 @@
     const BC_LABELS = {
       dash:'Дашборд', reports:'Отчёты', analytics:'Аналитика',
       workers:'Сборщики', 'worker-reports':'Все отчёты сборщиков',
-      'add-report':'Добавить отчёт',
       news:'Новости', team:'Команда', careers:'Вакансии',
       settings:'Настройки', profile:'Мой профиль'
     };
@@ -2840,7 +2746,6 @@
       if (pageId === 'workers')        loadWorkers();
       if (pageId === 'worker-reports') loadAllWorkerReports();
       if (pageId === 'news')           loadNews();
-      if (pageId === 'add-report')     initAddReport();
     }
 
     function updateProfileStats() {
@@ -4173,318 +4078,6 @@
       } catch(e) { toast('Ошибка: ' + e.message, 'err'); }
     });
 
-    /* ══════════════════════════════════════════════════════════
-       ДОБАВИТЬ ОТЧЁТ — от имени выбранного аккаунта
-    ══════════════════════════════════════════════════════════ */
-    let arHistory   = [];
-    let arSelectedW = null;  /* выбранный сборщик {_id, displayName, email, ...} */
-    let arInited    = false;
-
-    function initAddReport() {
-      const dateInp = document.getElementById('ar-date');
-      if (dateInp && !dateInp.value) dateInp.value = new Date().toISOString().slice(0, 10);
-
-      /* Наполняем карточки сборщиков */
-      renderWorkerCards();
-
-      if (arInited) return;
-      arInited = true;
-
-      /* Сброс выбора */
-      document.getElementById('ar-sel-clear')?.addEventListener('click', () => {
-        arSelectedW = null;
-        document.getElementById('ar-selected-worker').style.display  = 'none';
-        document.getElementById('ar-worker-cards').style.display      = '';
-        document.getElementById('ar-form-wrap').style.display         = 'none';
-        document.querySelectorAll('.ar-wk-card').forEach(c => c.classList.remove('active'));
-      });
-
-      /* Live-превью */
-      ['ar-arr-time','ar-dep-time'].forEach(id =>
-        document.getElementById(id)?.addEventListener('change', updateArDuration)
-      );
-      ['ar-corr','ar-speed'].forEach(id =>
-        document.getElementById(id)?.addEventListener('input', () => { updateArViolAlert(); updateArPreviews(); })
-      );
-
-      /* Сброс */
-      document.getElementById('ar-reset-btn')?.addEventListener('click', resetArForm);
-      /* Сохранить */
-      document.getElementById('ar-submit-btn')?.addEventListener('click', submitAddReport);
-    }
-
-    function renderWorkerCards() {
-      const wrap = document.getElementById('ar-worker-cards');
-      if (!wrap) return;
-
-      if (!allWorkers.length) {
-        wrap.innerHTML = '<div style="font-size:.76rem;color:var(--muted-2)">Нет сборщиков в базе. Сначала откройте раздел «Сборщики».</div>';
-        return;
-      }
-
-      wrap.innerHTML = allWorkers.map(w => {
-        const name = w.displayName || w.email?.split('@')[0] || '—';
-        const init = name.charAt(0).toUpperCase();
-        const isActive = arSelectedW?._id === w._id;
-        /* Считаем отчёты этого сборщика */
-        const rCount = allWorkerRpts.filter(r => r.uid === w._id).length;
-        return `<button class="ar-wk-card${isActive?' active':''}" data-uid="${esc(w._id)}"
-          style="display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid ${isActive?'var(--accent-mid)':'var(--border)'};
-                 padding:9px 13px;cursor:pointer;transition:border-color var(--tf),background var(--tf);text-align:left;
-                 ${isActive?'background:var(--accent-dim);':''}"
-          onmouseover="if(!this.classList.contains('active')){this.style.borderColor='var(--border-h)';this.style.background='var(--surface-2)';}"
-          onmouseout="if(!this.classList.contains('active')){this.style.borderColor='var(--border)';this.style.background='var(--surface)';}">
-          <div style="width:30px;height:30px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-mid);
-                      display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;
-                      font-size:.72rem;color:var(--accent);flex-shrink:0">${esc(init)}</div>
-          <div style="min-width:0">
-            <div style="font-size:.8rem;color:${isActive?'var(--accent)':'#fff'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${esc(name)}</div>
-            <div style="font-size:.62rem;color:var(--muted-2);margin-top:1px">${rCount} смен · ${w.role||'worker'}</div>
-          </div>
-        </button>`;
-      }).join('');
-
-      /* Клик по карточке */
-      wrap.querySelectorAll('.ar-wk-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const w = allWorkers.find(x => x._id === card.dataset.uid);
-          if (!w) return;
-          arSelectedW = w;
-
-          /* Показываем выбранного */
-          const name = w.displayName || w.email?.split('@')[0] || '—';
-          const init = name.charAt(0).toUpperCase();
-          document.getElementById('ar-sel-av').textContent   = init;
-          document.getElementById('ar-sel-name').textContent = name;
-          document.getElementById('ar-sel-meta').textContent = (w.email||'') + (w.role ? ' · '+w.role : '') + ' · ' + allWorkerRpts.filter(r=>r.uid===w._id).length + ' смен';
-          document.getElementById('ar-selected-worker').style.display = '';
-          document.getElementById('ar-worker-cards').style.display    = 'none';
-          document.getElementById('ar-form-wrap').style.display       = '';
-        });
-      });
-    }
-
-    function updateArDuration() {
-      const arrT = document.getElementById('ar-arr-time')?.value;
-      const depT = document.getElementById('ar-dep-time')?.value;
-      const durEl = document.getElementById('ar-dur-val');
-      const prevEl = document.getElementById('ar-duration-preview');
-
-      const hasData = arrT || depT || document.getElementById('ar-corr')?.value || document.getElementById('ar-speed')?.value;
-      if (prevEl) prevEl.style.display = hasData ? '' : 'none';
-
-      if (arrT && depT && durEl) {
-        const [ah,am] = arrT.split(':').map(Number);
-        const [dh,dm] = depT.split(':').map(Number);
-        const mins = (dh*60+dm) - (ah*60+am);
-        if (mins > 0) {
-          durEl.textContent = Math.floor(mins/60) + 'ч ' + (mins%60 ? mins%60+'м' : '');
-        } else {
-          durEl.textContent = '—';
-        }
-      }
-      updateArPreviews();
-    }
-
-    function updateArPreviews() {
-      const corr  = document.getElementById('ar-corr')?.value;
-      const speed = document.getElementById('ar-speed')?.value;
-      const corrEl  = document.getElementById('ar-corr-preview');
-      const speedEl = document.getElementById('ar-speed-preview');
-
-      if (corrEl) {
-        if (corr !== '' && corr !== null && !isNaN(parseFloat(corr))) {
-          const v = parseFloat(corr);
-          corrEl.textContent = v.toFixed(1) + '%';
-          corrEl.style.color = v > 4 ? 'var(--red)' : 'var(--green)';
-        } else {
-          corrEl.textContent = '—';
-          corrEl.style.color = 'var(--muted-2)';
-        }
-      }
-      if (speedEl) {
-        if (speed !== '' && speed !== null && !isNaN(parseFloat(speed))) {
-          const v = parseFloat(speed);
-          speedEl.textContent = v + ' с';
-          speedEl.style.color = v > 38 ? 'var(--red)' : 'var(--green)';
-        } else {
-          speedEl.textContent = '—';
-          speedEl.style.color = 'var(--muted-2)';
-        }
-      }
-
-      const prevEl = document.getElementById('ar-duration-preview');
-      const corrV = corr !== '' && !isNaN(parseFloat(corr));
-      const speV  = speed !== '' && !isNaN(parseFloat(speed));
-      const arrT  = document.getElementById('ar-arr-time')?.value;
-      const depT  = document.getElementById('ar-dep-time')?.value;
-      if (prevEl) prevEl.style.display = (corrV || speV || (arrT && depT)) ? '' : 'none';
-    }
-
-    function updateArViolAlert() {
-      const corr  = document.getElementById('ar-corr')?.value;
-      const speed = document.getElementById('ar-speed')?.value;
-      const corrV  = corr  !== '' && !isNaN(parseFloat(corr))  ? parseFloat(corr)  : null;
-      const speedV = speed !== '' && !isNaN(parseFloat(speed)) ? parseFloat(speed) : null;
-      const alertEl = document.getElementById('ar-viol-alert');
-      const textEl  = document.getElementById('ar-viol-text');
-      if (!alertEl) return;
-      const parts = [];
-      if (corrV  !== null && corrV  > 4)  parts.push('Корр. ' + corrV.toFixed(1)  + '% > 4%');
-      if (speedV !== null && speedV > 38) parts.push('Скор. ' + speedV + 'с > 38с');
-      if (parts.length) {
-        if (textEl) textEl.textContent = 'Нарушение: ' + parts.join(' · ');
-        alertEl.style.display = '';
-      } else {
-        alertEl.style.display = 'none';
-      }
-      /* Цвет hint */
-      const corrHint  = document.getElementById('ar-corr-hint');
-      const speedHint = document.getElementById('ar-speed-hint');
-      if (corrHint)  corrHint.style.color  = corrV  !== null && corrV  > 4  ? 'var(--red)' : '';
-      if (speedHint) speedHint.style.color = speedV !== null && speedV > 38 ? 'var(--red)' : '';
-    }
-
-    function resetArForm() {
-      ['ar-address','ar-arr-time','ar-arr-photo','ar-arr-note',
-       'ar-dep-time','ar-dep-photo-tsd','ar-dep-photo-s1','ar-dep-photo-s2','ar-dep-note',
-       'ar-positions','ar-orders','ar-corr','ar-speed','ar-tg'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      const d = document.getElementById('ar-date');
-      if (d) d.value = new Date().toISOString().slice(0, 10);
-      const alertEl = document.getElementById('ar-viol-alert');
-      if (alertEl) alertEl.style.display = 'none';
-      const prevEl = document.getElementById('ar-duration-preview');
-      if (prevEl) prevEl.style.display = 'none';
-    }
-
-    async function submitAddReport() {
-      if (!arSelectedW) { toast('Выберите сборщика', 'err'); return; }
-
-      const date    = document.getElementById('ar-date')?.value;
-      const address = document.getElementById('ar-address')?.value.trim();
-      const arrTime = document.getElementById('ar-arr-time')?.value;
-      const depTime = document.getElementById('ar-dep-time')?.value;
-
-      /* Валидация обязательных */
-      const errs = [];
-      if (!date)    errs.push('ar-date');
-      if (!address) errs.push('ar-address');
-      if (!arrTime) errs.push('ar-arr-time');
-      if (!depTime) errs.push('ar-dep-time');
-      if (errs.length) {
-        errs.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) { el.style.borderColor='rgba(207,102,121,.6)'; setTimeout(()=>el.style.borderColor='',2000); }
-        });
-        toast('Заполните обязательные поля', 'err');
-        return;
-      }
-
-      /* Пустое поле = null, не записываем в stats */
-      const gNum = id => {
-        const v = document.getElementById(id)?.value;
-        return (v === '' || v == null || isNaN(parseFloat(v))) ? null : parseFloat(v);
-      };
-      const gInt = id => {
-        const v = document.getElementById(id)?.value;
-        return (v === '' || v == null || isNaN(parseInt(v))) ? null : parseInt(v);
-      };
-
-      const corrVal  = gNum('ar-corr');
-      const speedVal = gNum('ar-speed');
-      const posVal   = gInt('ar-positions');
-      const ordVal   = gInt('ar-orders');
-
-      const stats = {};
-      if (posVal   !== null) stats.positions        = posVal;
-      if (ordVal   !== null) stats.orders           = ordVal;
-      if (corrVal  !== null) stats.correction_pct   = corrVal;
-      if (speedVal !== null) stats.avg_position_sec = speedVal;
-
-      const workerName = arSelectedW.displayName || arSelectedW.email?.split('@')[0] || '';
-
-      const data = {
-        uid:        arSelectedW._id,
-        workerName: workerName,
-        date, address,
-        arrival: {
-          time:      arrTime,
-          ...(document.getElementById('ar-arr-photo')?.value.trim() ? { photo_tsd: document.getElementById('ar-arr-photo').value.trim() } : {}),
-          ...(document.getElementById('ar-arr-note')?.value.trim()  ? { note:      document.getElementById('ar-arr-note').value.trim()  } : {}),
-        },
-        departure: {
-          time:     depTime,
-          ...(document.getElementById('ar-dep-photo-tsd')?.value.trim() ? { photo_tsd:    document.getElementById('ar-dep-photo-tsd').value.trim() } : {}),
-          ...(document.getElementById('ar-dep-photo-s1')?.value.trim()  ? { photo_stats1: document.getElementById('ar-dep-photo-s1').value.trim()  } : {}),
-          ...(document.getElementById('ar-dep-photo-s2')?.value.trim()  ? { photo_stats2: document.getElementById('ar-dep-photo-s2').value.trim()  } : {}),
-          ...(document.getElementById('ar-dep-note')?.value.trim()      ? { note:         document.getElementById('ar-dep-note').value.trim()      } : {}),
-        },
-        ...(Object.keys(stats).length ? { stats } : {}),
-        ...(document.getElementById('ar-tg')?.value.trim() ? { telegram_post: document.getElementById('ar-tg').value.trim() } : {}),
-        isViolation: (corrVal !== null && corrVal > 4) || (speedVal !== null && speedVal > 38),
-        addedByAdmin: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      const btn = document.getElementById('ar-submit-btn');
-      const lbl = document.getElementById('ar-submit-label');
-      if (btn) btn.disabled = true;
-      if (lbl) lbl.textContent = 'Сохранение…';
-
-      try {
-        const ref = await addDoc(collection(fdb, 'reports'), data);
-
-        /* Добавляем в историю */
-        arHistory.unshift({ _id: ref.id, ...data, _workerName: workerName, createdAt: new Date() });
-        renderArHistory();
-
-        /* Обновляем кэш */
-        if (allWorkerRpts.length > 0) {
-          allWorkerRpts.unshift({ _id: ref.id, ...data });
-          renderWorkerReports();
-        }
-
-        toast('Отчёт сохранён · ' + workerName, 'ok');
-        resetArForm();
-      } catch(e) {
-        toast('Ошибка: ' + e.message, 'err');
-      } finally {
-        if (btn) btn.disabled = false;
-        if (lbl) lbl.textContent = 'Сохранить отчёт';
-      }
-    }
-
-    function renderArHistory() {
-      const el    = document.getElementById('ar-history');
-      const count = document.getElementById('ar-history-count');
-      if (count) count.textContent = arHistory.length;
-      if (!el || !arHistory.length) {
-        if (el) el.innerHTML = '<div style="padding:16px;text-align:center;font-size:.74rem;color:var(--muted-2)">Ещё ничего не добавлено</div>';
-        return;
-      }
-      const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-      el.innerHTML = arHistory.map(r => {
-        const d   = new Date(r.date + 'T00:00:00');
-        const viol= r.isViolation;
-        const s   = r.stats || {};
-        return '<div class="row-item has-accent ' + (viol?'accent-red':'accent-green') + '" style="grid-template-columns:60px 1fr 1fr auto;gap:12px">' +
-          '<div style="font-family:var(--font-display);font-weight:700;font-size:.64rem;color:var(--muted)"><strong style="display:block;font-size:1rem;color:#fff;line-height:1">' + d.getDate() + '</strong>' + MONTHS[d.getMonth()] + '</div>' +
-          '<div style="min-width:0">' +
-            '<div style="font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.address||'—') + '</div>' +
-            '<div style="font-size:.65rem;color:var(--accent);margin-top:2px">' + esc(r._workerName||r.workerName||'—') + '</div>' +
-          '</div>' +
-          '<div style="font-size:.7rem;color:var(--muted)">' +
-            (r.arrival?.time ? r.arrival.time : '') + (r.departure?.time ? ' → ' + r.departure.time : '') +
-            (s.orders != null ? '<br><span style="color:var(--green)">' + s.orders + ' заказов</span>' : '') +
-          '</div>' +
-          (viol ? '<span class="pill pill-red"><span class="pill-dot"></span>Нарушение</span>' : '<span class="pill pill-green"><span class="pill-dot"></span>ОК</span>') +
-        '</div>';
-      }).join('');
-    }
     window._dash = { toast, refreshAll };
 
   })(); /* конец IIFE */
