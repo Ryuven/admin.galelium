@@ -3013,6 +3013,7 @@
       if (pageId === 'worker-reports') loadAllWorkerReports();
       if (pageId === 'news')           loadNews();
       if (pageId === 'add-report')     { if (typeof initAddReport === 'function') initAddReport(); }
+
     }
 
     function updateProfileStats() {
@@ -3089,11 +3090,6 @@
     const _initNewBtn = document.getElementById('tb-new-btn');
     if (_initNewBtn) _initNewBtn.style.display = 'none';
     navigate('dash');
-    /* Предзагружаем Firestore данные для дашборда */
-    setTimeout(() => {
-      if (!allWorkers.length) loadWorkers();
-      if (!allWorkerRpts.length) loadAllWorkerReports();
-    }, 400);
 
     /* ── ДРОВЕР ──────────────────────────────────────────── */
     const droverlay = document.getElementById('droverlay');
@@ -4564,6 +4560,16 @@
     }
 
     window._dash = { toast, refreshAll };
+
+    /* ── Фоновая предзагрузка Firestore данных для дашборда ──
+       Выполняется ПОСЛЕ всех объявлений переменных                */
+    setTimeout(function() {
+      try {
+        if (typeof loadAllWorkerReports === 'function' && allWorkerRpts.length === 0) {
+          loadAllWorkerReports().catch(function(){});
+        }
+      } catch(e) { /* не критично */ }
+    }, 600);
 
   })(); /* конец IIFE */
 
