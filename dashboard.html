@@ -994,8 +994,7 @@
     .drawer { transition: transform .28s cubic-bezier(.32,.72,0,1); }
     .drawer.open { box-shadow: -8px 0 40px rgba(0,0,0,.5); }
 
-    /* ── Страница активна — плавное появление ── */
-    .page.active { animation: fadeUp .22s cubic-bezier(.4,0,.2,1) both; }
+    /* .page.active — display:block + анимация уже в основном CSS */
 
     /* ── Scrollbar content ── */
     .content::-webkit-scrollbar { width: 4px; }
@@ -2363,11 +2362,12 @@
       }
     } catch(e) {
       console.warn('Firestore role check failed:', e.message);
-      /* При ошибке проверки — пускаем (чтобы не блокировать самого себя) */
+      /* При ошибке проверки — пускаем, чтобы не блокировать */
     }
 
-    authLoader.style.display = 'none';
-    shellEl.classList.add('active');
+    /* Скрываем loader и показываем shell */
+    try { authLoader.style.display = 'none'; } catch(e) {}
+    try { shellEl.classList.add('active'); } catch(e) {}
 
     /* Заполняем sidebar */
     const displayName = user.displayName || user.email || 'Администратор';
@@ -2386,7 +2386,7 @@
     if (emailInp) emailInp.value = user.email || '';
 
     /* ─── Заполняем Firebase Auth данные в профиле ─── */
-    fillAuthProfile(user);
+    try { fillAuthProfile(user); } catch(e) { console.warn('fillAuthProfile:', e); }
 
     /* ─── Загружаем расширенный профиль из RTDB /users/{uid} ─── */
     const userRef = ref(db, 'users/' + user.uid);
@@ -2405,7 +2405,7 @@
     });
 
     /* Загружаем данные отчётов */
-    initFirebaseData();
+    try { initFirebaseData(); } catch(e) { console.error('initFirebaseData:', e); refreshAll(); }
   });
 
   /* ── ВЫХОД ──────────────────────────────────────────────── */
@@ -2422,25 +2422,34 @@
 
   function initFirebaseData() {
     /* Слушаем /reports в реальном времени */
-    const reportsRef = ref(db, 'reports');
-
-    onValue(reportsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        /* RTDB хранит как объект {id: {...}}, конвертируем в массив */
-        reports = Object.entries(data).map(([key, val]) => ({
-          ...val,
-          _fbKey: key    /* сохраняем ключ Firebase для удаления/обновления */
-        })).sort((a, b) => b.date.localeCompare(a.date));
-      } else {
+    try {
+      const reportsRef = ref(db, 'reports');
+      onValue(reportsRef, (snapshot) => {
+        try {
+          const data = snapshot.val();
+          if (data) {
+            reports = Object.entries(data).map(([key, val]) => ({
+              ...val,
+              _fbKey: key
+            })).sort((a, b) => (b.date||'').localeCompare(a.date||''));
+          } else {
+            reports = [];
+          }
+        } catch(e) {
+          console.error('RTDB parse error:', e);
+          reports = [];
+        }
+        refreshAll();
+      }, (error) => {
+        console.error('RTDB error:', error);
         reports = [];
-      }
-      refreshAll();
-    }, (error) => {
-      console.error('RTDB error:', error);
-      _toast('Ошибка чтения из Firebase RTDB', 'err');
-      refreshAll();
-    });
+        refreshAll(); /* всё равно показываем UI */
+      });
+    } catch(e) {
+      console.error('initFirebaseData error:', e);
+      reports = [];
+      refreshAll(); /* показываем UI даже при ошибке */
+    }
   }
 
   /* Сохранить/обновить один отчёт в RTDB */
@@ -2737,10 +2746,10 @@
     }
 
     function refreshAll() {
-      refreshDashboard();
-      refreshReports();
-      refreshAnalytics();
-      updateBadge();
+      try { refreshDashboard(); }  catch(e) { console.warn('refreshDashboard:', e); }
+      try { refreshReports(); }    catch(e) { console.warn('refreshReports:', e); }
+      try { refreshAnalytics(); }  catch(e) { console.warn('refreshAnalytics:', e); }
+      try { updateBadge(); }       catch(e) {}
       updateDataSize();
     }
 
@@ -2998,7 +3007,13 @@
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
       const pg = document.getElementById('page-' + pageId);
-      if (pg) pg.classList.add('active');
+      if (pg) {
+        pg.classList.add('active');
+      } else {
+        const fallback = document.getElementById('page-dash');
+        if (fallback) fallback.classList.add('active');
+        console.warn('Page not found:', pageId);
+      }
       const sb = document.querySelector('.sb-link[data-page="' + pageId + '"]');
       if (sb) sb.classList.add('active');
       setText('bc-page', BC_LABELS[pageId] || pageId);
