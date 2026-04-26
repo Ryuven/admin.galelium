@@ -2942,22 +2942,57 @@
       settings:'Настройки', profile:'Мой профиль'
     };
 
-    function navigate(pageId) {
+    const VALID_PAGES = new Set(Object.keys(BC_LABELS));
+
+    /* ── HASH ROUTING ─────────────────────────────────────── */
+    function getHashPage() {
+      const h = location.hash.replace(/^#/, '').trim();
+      return VALID_PAGES.has(h) ? h : 'dash';
+    }
+
+    function navigate(pageId, { push = true } = {}) {
+      if (!VALID_PAGES.has(pageId)) pageId = 'dash';
+
+      /* Меняем хэш в URL без перезагрузки */
+      if (push && location.hash !== '#' + pageId) {
+        _nav = true;
+        location.hash = pageId === 'dash' ? '' : pageId;
+        _nav = false;
+      }
+
+      /* Переключаем контент */
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
       const pg = document.getElementById('page-' + pageId);
       if (pg) pg.classList.add('active');
       const sb = document.querySelector('.sb-link[data-page="' + pageId + '"]');
       if (sb) sb.classList.add('active');
+
+      /* Breadcrumb + title вкладки */
       setText('bc-page', BC_LABELS[pageId] || pageId);
+      document.title = BC_LABELS[pageId] + ' · Galelium Admin';
+
+      /* Кнопка «Добавить» только на странице Новостей */
       const newBtn = document.getElementById('tb-new-btn');
-      if (newBtn) { newBtn.style.display = ['news'].includes(pageId) ? '' : 'none'; newBtn.title = 'Новая статья'; }
-      /* При открытии Workers-страниц — загружаем из Firestore */
+      if (newBtn) {
+        newBtn.style.display = pageId === 'news' ? '' : 'none';
+        newBtn.title = 'Новая статья';
+      }
+
+      /* Ленивая загрузка данных */
       if (pageId === 'workers')        loadWorkers();
       if (pageId === 'worker-reports') loadAllWorkerReports();
       if (pageId === 'news')           loadNews();
       if (pageId === 'add-report')     initAddReport();
     }
+
+    let _nav = false;
+
+    /* Кнопки «Назад» / «Вперёд» браузера */
+    window.addEventListener('hashchange', () => {
+      if (_nav) return;
+      navigate(getHashPage(), { push: false });
+    });
 
     function updateProfileStats() {
       const total  = reports.length;
@@ -3029,7 +3064,8 @@
       });
     });
 
-    navigate('dash');
+    /* Первый запуск — читаем хэш из URL */
+    navigate(getHashPage(), { push: false });
 
     /* ── ДРОВЕР ──────────────────────────────────────────── */
     const droverlay = document.getElementById('droverlay');
