@@ -2648,6 +2648,14 @@
 
     /* Загружаем данные отчётов */
     initFirebaseData();
+
+    /* Навигируем на нужную страницу ПОСЛЕ auth + данных */
+    setTimeout(function() {
+      if (window._dashNavigate) {
+        window._dashNavigate();
+        window._dashNavigate = null;
+      }
+    }, 150);
   });
 
   /* ── ВЫХОД ──────────────────────────────────────────────── */
@@ -3238,11 +3246,15 @@
     function navigate(pageId, { push = true } = {}) {
       if (!VALID_PAGES.has(pageId)) pageId = 'dash';
 
-      /* Меняем хэш в URL без перезагрузки */
-      if (push && location.hash !== '#' + pageId) {
+      /* Меняем хэш в URL без перезагрузки.
+         Используем requestAnimationFrame чтобы hashchange не вызвал
+         повторный navigate (событие всегда асинхронное) */
+      const targetHash = pageId === 'dash' ? '' : pageId;
+      if (push && location.hash.replace(/^#/, '') !== targetHash) {
         _nav = true;
-        location.hash = pageId === 'dash' ? '' : pageId;
-        _nav = false;
+        location.hash = targetHash;
+        /* Сбрасываем флаг только после того как hashchange мог сработать */
+        requestAnimationFrame(() => { _nav = false; });
       }
 
       /* Переключаем контент */
@@ -3350,8 +3362,16 @@
       });
     });
 
-    /* Первый запуск — читаем хэш из URL */
-    navigate(getHashPage(), { push: false });
+    /* Показываем дашборд пока идёт авторизация (данные ещё не готовы) */
+    navigate('dash', { push: false });
+
+    /* После авторизации — перейти на нужную страницу (из хэша URL) */
+    window._dashNavigate = function() {
+      navigate(getHashPage(), { push: false });
+    };
+
+    /* Экспортируем navigate для внешнего вызова */
+    window._navigate = navigate;
 
     /* ── ДРОВЕР ──────────────────────────────────────────── */
     const droverlay = document.getElementById('droverlay');
@@ -3507,7 +3527,9 @@
           });
         }
       } catch(e) {
-        listEl.innerHTML = '<div class="empty"><p style="color:var(--red)">Ошибка Firestore: ' + esc(e.message) + '</p></div>';
+        console.error('[loadWorkers] Firestore error:', e);
+        listEl.innerHTML = '<div class="empty"><p style="color:var(--red)">Ошибка Firestore: ' + esc(e.message) + '</p><p style="font-size:.65rem;color:var(--muted);margin-top:6px">Проверь Firestore Rules и индексы в Firebase Console</p></div>';
+        if (window._dash && window._dash.toast) window._dash.toast('Ошибка загрузки сборщиков: ' + e.code, 'err');
       }
     }
 
@@ -4182,7 +4204,9 @@
         renderNewsTable();
         updateNewsBadge();
       } catch(e) {
+        console.error('[loadNews] Firestore error:', e);
         if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--red)">Ошибка: ' + esc(e.message) + '</td></tr>';
+        toast('Ошибка загрузки новостей: ' + (e.code || e.message), 'err');
       }
     }
 
