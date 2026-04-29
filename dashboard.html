@@ -914,6 +914,88 @@
     /* Анимация загрузочного экрана */
     @keyframes authbar { 0%{transform:translateX(-100%)} 50%{transform:translateX(0%)} 100%{transform:translateX(100%)} }
     #auth-bar { animation: authbar 1.4s ease-in-out infinite !important; width: 60% !important; }
+
+    /* ─── БЕЗОПАСНОСТЬ — Security Page ───────────────────── */
+    .sec-tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      margin-bottom: 20px; overflow-x: auto;
+    }
+    .sec-tab {
+      padding: 8px 18px; font-size: .72rem; font-weight: 500; letter-spacing: .04em;
+      color: var(--muted); border-bottom: 2px solid transparent;
+      transition: color var(--tf), border-color var(--tf);
+      white-space: nowrap; background: none; border-top: none; border-left: none; border-right: none;
+      cursor: pointer;
+    }
+    .sec-tab:hover { color: var(--text); }
+    .sec-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .sec-panel { display: none; }
+    .sec-panel.active { display: block; }
+
+    /* Audit log table */
+    .audit-table { width: 100%; border-collapse: collapse; font-size: .72rem; }
+    .audit-table th {
+      text-align: left; padding: 8px 12px;
+      font-size: .58rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted-2); border-bottom: 1px solid var(--border);
+      font-weight: 500; white-space: nowrap;
+    }
+    .audit-table td {
+      padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.03);
+      vertical-align: middle; max-width: 220px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .audit-table tr:hover td { background: var(--surface-2); }
+    .audit-table tr:last-child td { border-bottom: none; }
+
+    /* Severity badges */
+    .sev { display: inline-flex; align-items: center; gap: 5px; font-size: .6rem;
+           letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px;
+           border-radius: 20px; font-weight: 600; }
+    .sev-info     { background: rgba(100,160,255,.10); color: #6aa0ff; }
+    .sev-warning  { background: rgba(234,179,8,.12);   color: var(--yellow); }
+    .sev-critical { background: rgba(208,96,112,.12);  color: var(--red); }
+
+    /* Action badge */
+    .act-badge {
+      font-size: .58rem; letter-spacing: .06em; padding: 2px 7px;
+      border: 1px solid var(--border); color: var(--muted);
+      display: inline-block; white-space: nowrap;
+    }
+
+    /* Admin card в списке */
+    .admin-row {
+      display: grid; grid-template-columns: 36px 1fr auto auto auto;
+      align-items: center; gap: 12px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      transition: background var(--tf);
+    }
+    .admin-row:last-child { border-bottom: none; }
+    .admin-row:hover { background: var(--surface-2); }
+    .admin-online { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .admin-online.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .admin-online.off { background: var(--muted-2); }
+
+    /* Security KPI strip */
+    .sec-kpi-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 2px; margin-bottom: 20px;
+    }
+    @media (max-width: 860px) { .sec-kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .sec-kpi-strip { grid-template-columns: 1fr 1fr; }
+      .audit-table .hide-mob { display: none; } }
+
+    /* Log filter bar */
+    .log-filter-bar {
+      display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+    }
+    .log-filter-bar select, .log-filter-bar input {
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); padding: 6px 10px; font-size: .7rem;
+      outline: none; font-family: var(--font);
+    }
+    .log-filter-bar select:focus, .log-filter-bar input:focus { border-color: var(--accent-mid); }
+
   </style>
 </head>
 <body>
@@ -1028,6 +1110,15 @@
         <a class="sb-link" data-page="careers" href="#">
           <svg class="sb-icon" viewBox="0 0 15 15" fill="none"><rect x="4" y="1.5" width="7" height="3.5" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="5" width="12" height="8.5" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 8.5h12" stroke="currentColor" stroke-width="1.2"/></svg>
           Вакансии
+        </a>
+      </div>
+
+      <div class="sb-section">
+        <span class="sb-section-label">Отделы</span>
+        <a class="sb-link" data-page="security" href="#">
+          <svg class="sb-icon" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5L2 4v4c0 3.1 2.4 5.6 5.5 6 3.1-.4 5.5-2.9 5.5-6V4L7.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M5 7.5l1.5 1.5L10 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Безопасность
+          <span class="sb-badge" id="sb-sec-badge" style="display:none">!</span>
         </a>
       </div>
 
@@ -2007,6 +2098,171 @@
 
       </div>
     </div>
+
+    <!-- ════ ОТДЕЛ БЕЗОПАСНОСТИ ════════════════════════════ -->
+    <div class="page" id="page-security">
+      <div class="content-pad">
+
+        <div class="page-header-row">
+          <div>
+            <span class="eyebrow">Отделы · Galelium Corporation</span>
+            <div class="section-title">Отдел безопасности</div>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-sm" id="sec-refresh-btn">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M9.5 5.5a4 4 0 1 1-1.1-2.7M9.5 1v3h-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Обновить
+            </button>
+            <button class="btn btn-sm" id="sec-export-btn">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v7M2 6l3.5 3.5L9 6M1.5 10h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Экспорт лога
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI стрип -->
+        <div class="sec-kpi-strip" id="sec-kpis">
+          <div class="kpi">
+            <div class="kpi-label">Событий сегодня</div>
+            <div class="kpi-value" id="sec-kpi-today">—</div>
+            <div class="kpi-sub" id="sec-kpi-today-sub">загрузка…</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Входов в систему</div>
+            <div class="kpi-value" id="sec-kpi-logins">—</div>
+            <div class="kpi-sub" id="sec-kpi-logins-sub">за сегодня</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Изменений данных</div>
+            <div class="kpi-value" id="sec-kpi-changes">—</div>
+            <div class="kpi-sub" id="sec-kpi-changes-sub">за сегодня</div>
+          </div>
+          <div class="kpi" style="border-color:rgba(208,96,112,.2)">
+            <div class="kpi-label" style="color:var(--red)">Предупреждений</div>
+            <div class="kpi-value" id="sec-kpi-warn">—</div>
+            <div class="kpi-sub" id="sec-kpi-warn-sub">критических / warning</div>
+          </div>
+        </div>
+
+        <!-- Табы -->
+        <div class="sec-tabs">
+          <button class="sec-tab active" data-sec-tab="audit">
+            Аудит лог <span id="sec-audit-count" style="margin-left:5px;opacity:.5;font-size:.6rem"></span>
+          </button>
+          <button class="sec-tab" data-sec-tab="admins">Администраторы</button>
+          <button class="sec-tab" data-sec-tab="events">
+            События
+            <span id="sec-warn-dot" style="display:inline-block;width:6px;height:6px;background:var(--red);border-radius:50%;margin-left:5px;vertical-align:middle;display:none"></span>
+          </button>
+        </div>
+
+        <!-- ── ТАБ: АУДИТ ЛОГ ────────────────────────── -->
+        <div class="sec-panel active" id="sec-panel-audit">
+          <div class="log-filter-bar">
+            <select id="sec-filter-action" style="min-width:130px">
+              <option value="">Все действия</option>
+              <option value="login">Вход</option>
+              <option value="logout">Выход</option>
+              <option value="create">Создание</option>
+              <option value="update">Изменение</option>
+              <option value="delete">Удаление</option>
+              <option value="export">Экспорт</option>
+            </select>
+            <select id="sec-filter-sev" style="min-width:130px">
+              <option value="">Все уровни</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="critical">Critical</option>
+            </select>
+            <select id="sec-filter-module" style="min-width:130px">
+              <option value="">Все модули</option>
+              <option value="auth">Авторизация</option>
+              <option value="reports">Отчёты</option>
+              <option value="workers">Сборщики</option>
+              <option value="news">Новости</option>
+              <option value="profile">Профиль</option>
+            </select>
+            <input type="text" id="sec-filter-search" placeholder="Поиск по email / описанию…" style="flex:1;min-width:160px">
+          </div>
+
+          <div style="background:var(--surface);border:1px solid var(--border);overflow:hidden">
+            <div style="overflow-x:auto">
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th style="width:130px">Время</th>
+                    <th>Пользователь</th>
+                    <th class="hide-mob">Модуль</th>
+                    <th>Действие</th>
+                    <th>Описание</th>
+                    <th class="hide-mob">Уровень</th>
+                  </tr>
+                </thead>
+                <tbody id="sec-audit-tbody">
+                  <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted)">Загрузка…</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="sec-audit-footer" style="padding:8px 14px;border-top:1px solid var(--border);font-size:.65rem;color:var(--muted-2);display:flex;justify-content:space-between;align-items:center">
+              <span id="sec-audit-info">—</span>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm" id="sec-audit-prev" style="padding:3px 10px;font-size:.6rem" disabled>← Пред</button>
+                <button class="btn btn-sm" id="sec-audit-next" style="padding:3px 10px;font-size:.6rem">След →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ТАБ: АДМИНИСТРАТОРЫ ────────────────────── -->
+        <div class="sec-panel" id="sec-panel-admins">
+          <div style="background:var(--surface);border:1px solid var(--border);overflow:hidden">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:.72rem;font-weight:600;letter-spacing:.04em">Администраторы системы</span>
+              <span id="sec-admins-online" style="font-size:.62rem;color:var(--muted)">—</span>
+            </div>
+            <div id="sec-admins-list">
+              <div style="padding:28px;text-align:center;color:var(--muted);font-size:.72rem">Загрузка…</div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;padding:14px 16px;background:var(--surface);border:1px solid rgba(234,179,8,.15)">
+            <div style="font-size:.7rem;font-weight:600;color:var(--yellow);margin-bottom:6px;display:flex;align-items:center;gap:7px">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L1 10.5h11L6.5 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.5 5v3M6.5 9.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              Внимание: уязвимость роли
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);line-height:1.7">
+              Поле «Роль» в профиле пользователя доступно для редактирования. Без Firestore Security Rules любой залогиненный пользователь может присвоить себе роль <code style="background:var(--surface-3);padding:1px 5px;color:var(--accent)">admin</code>.
+              Рекомендуется настроить правила Firestore и убрать поле роли из формы профиля.
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ТАБ: СОБЫТИЯ ────────────────────────────── -->
+        <div class="sec-panel" id="sec-panel-events">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:2px" class="fg-2">
+
+            <div style="background:var(--surface);border:1px solid var(--border);padding:14px 16px">
+              <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:10px">Последние входы</div>
+              <div id="sec-events-logins" style="font-size:.72rem;color:var(--muted)">Загрузка…</div>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);padding:14px 16px">
+              <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:10px">Удаления данных</div>
+              <div id="sec-events-deletes" style="font-size:.72rem;color:var(--muted)">Загрузка…</div>
+            </div>
+
+          </div>
+
+          <div style="background:var(--surface);border:1px solid var(--border);padding:14px 16px;margin-top:2px">
+            <div style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:12px">Чеклист безопасности</div>
+            <div id="sec-checklist" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /page-security -->
+
   </main><!-- /content -->
 </div><!-- /shell -->
 
@@ -2276,7 +2532,8 @@
     from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js';
   import {
     getFirestore, collection, doc, getDocs, getDoc,
-    query, orderBy, where, updateDoc, deleteDoc, addDoc, serverTimestamp
+    query, orderBy, where, limit, onSnapshot,
+    updateDoc, deleteDoc, addDoc, serverTimestamp
   } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
   /* ── КОНФИГ ─────────────────────────────────────────────── */
@@ -2295,6 +2552,28 @@
   const auth = getAuth(app);
   const db   = getDatabase(app);
   const fdb  = getFirestore(app);   /* Firestore для сборщиков */
+
+  /* ── AUDIT LOG — пишет событие в Firestore audit_logs ────── */
+  async function writeAudit({ action, module, description, severity = 'info', meta = {} }) {
+    try {
+      const user = auth.currentUser;
+      await addDoc(collection(fdb, 'audit_logs'), {
+        action,          /* login | logout | create | update | delete | export | view */
+        module,          /* auth | reports | workers | news | profile | settings      */
+        description,
+        severity,        /* info | warning | critical                                 */
+        meta,
+        uid:         user?.uid        || 'system',
+        userEmail:   user?.email      || 'system',
+        userName:    user?.displayName || user?.email?.split('@')[0] || 'system',
+        createdAt:   serverTimestamp(),
+        /* Клиентский timestamp для быстрой сортировки до serverTimestamp */
+        clientTs:    Date.now()
+      });
+    } catch(e) { /* Не прерываем основной поток если аудит упал */ }
+  }
+  /* Делаем доступной глобально внутри модуля */
+  window._audit = writeAudit;
 
   /* ── AUTH GUARD: если не залогинен → login.html ─────────── */
   const authLoader = document.getElementById('auth-loader');
@@ -2359,6 +2638,7 @@
       const d = snap.val() || {};
       if (!d.createdAt) loginUpdate.createdAt = user.metadata.creationTime || new Date().toISOString();
       update(userRef, loginUpdate);
+      writeAudit({ action:'login', module:'auth', description:'Вход в систему', severity:'info' });
     });
 
     /* Слушаем профиль в реальном времени (заполняет форму) */
@@ -2411,12 +2691,14 @@
     const clean = { ...report };
     delete clean._fbKey;
     await set(ref(db, 'reports/' + key), clean);
+    writeAudit({ action:'create', module:'reports', description:'Создан отчёт: ' + (clean.address||'—'), severity:'info', meta:{key} });
   }
 
   /* Удалить отчёт из RTDB */
   async function deleteReport(report) {
     const key = report._fbKey || report.id;
     await remove(ref(db, 'reports/' + key));
+    writeAudit({ action:'delete', module:'reports', description:'Удалён отчёт', severity:'warning', meta:{key} });
   }
 
   /* ── Экспорт в JSON ──────────────────────────────────────── */
@@ -2426,6 +2708,7 @@
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
     a.download = 'reports.json'; a.click();
+    writeAudit({ action:'export', module:'reports', description:'Экспорт всех отчётов в JSON', severity:'info' });
     URL.revokeObjectURL(a.href);
     _toast('Файл скачан ✓', 'ok');
   }
@@ -2592,6 +2875,7 @@
     try {
       /* update() — патч, не затирает другие поля */
       await update(ref(db, 'users/' + user.uid), profileData);
+      writeAudit({ action:'update', module:'profile', description:'Обновлён профиль администратора', severity:'info' });
 
       /* Обновляем displayName в Firebase Auth если изменилось */
       if (profileData.displayName && profileData.displayName !== user.displayName) {
@@ -2939,7 +3223,8 @@
       workers:'Сборщики', 'worker-reports':'Все отчёты сборщиков',
       'add-report':'Добавить отчёт',
       news:'Новости', team:'Команда', careers:'Вакансии',
-      settings:'Настройки', profile:'Мой профиль'
+      settings:'Настройки', profile:'Мой профиль',
+      security:'Безопасность'
     };
 
     const VALID_PAGES = new Set(Object.keys(BC_LABELS));
@@ -2984,6 +3269,7 @@
       if (pageId === 'worker-reports') loadAllWorkerReports();
       if (pageId === 'news')           loadNews();
       if (pageId === 'add-report')     initAddReport();
+      if (pageId === 'security')       initSecurity();
     }
 
     let _nav = false;
@@ -3463,6 +3749,7 @@
         const notes = document.getElementById('wk-edit-notes').value.trim();
         try {
           await updateDoc(doc(fdb, 'users', uid), { displayName:name, role, notes, updatedAt:serverTimestamp() });
+          writeAudit({ action:'update', module:'workers', description:'Изменён сборщик: ' + name, severity:'info', meta:{uid, role} });
           const idx = allWorkers.findIndex(x => x._id === uid);
           if (idx >= 0) { allWorkers[idx].displayName = name; allWorkers[idx].role = role; allWorkers[idx].notes = notes; }
           toast('Сохранено ✓', 'ok'); closeWkDrawer(); renderWorkersList();
@@ -3475,6 +3762,7 @@
         if (!confirm('Удалить документ ' + nm + ' из Firestore? Auth-аккаунт останется.')) return;
         try {
           await deleteDoc(doc(fdb, 'users', w._id));
+          writeAudit({ action:'delete', module:'workers', description:'Удалён сборщик: ' + (w.displayName||w._id), severity:'warning', meta:{uid:w._id} });
           allWorkers = allWorkers.filter(x => x._id !== w._id);
           renderWorkersList(); updateWorkersBadges();
           toast('Удалено из Firestore', 'err'); closeWkDrawer();
@@ -3988,6 +4276,7 @@
           if (!confirm('Удалить «' + (n?.title||'статью') + '»?')) return;
           try {
             await deleteDoc(doc(fdb, 'news', btn.dataset.id));
+            writeAudit({ action:'delete', module:'news', description:'Удалена новость', severity:'warning', meta:{id:btn.dataset.id} });
             newsItems = newsItems.filter(x => x._id !== btn.dataset.id);
             renderNewsTable(); updateNewsBadge();
             toast('Статья удалена', 'err');
@@ -4640,6 +4929,310 @@
     window._dash = { toast, refreshAll };
 
   })(); /* конец IIFE */
+
+
+  /* ════════════════════════════════════════════════════════════
+     ОТДЕЛ БЕЗОПАСНОСТИ — Security module
+  ════════════════════════════════════════════════════════════ */
+  let _secInited = false;
+  let _auditUnsub = null;   /* onSnapshot отписка */
+  let _allLogs    = [];     /* кеш всех загруженных логов */
+  let _secPage    = 0;      /* текущая страница пагинации */
+  const SEC_PAGE_SIZE = 25;
+
+  function initSecurity() {
+    if (_secInited) return;
+    _secInited = true;
+
+    /* ── Табы ───────────────────────────────────────────────── */
+    document.querySelectorAll('.sec-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sec-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.getElementById('sec-panel-' + btn.dataset.secTab);
+        if (panel) panel.classList.add('active');
+        if (btn.dataset.secTab === 'admins')  loadSecAdmins();
+        if (btn.dataset.secTab === 'events')  loadSecEvents();
+      });
+    });
+
+    /* ── Фильтры аудита ─────────────────────────────────────── */
+    ['sec-filter-action','sec-filter-sev','sec-filter-module','sec-filter-search'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => { _secPage = 0; renderAuditTable(); });
+    });
+
+    /* ── Пагинация ──────────────────────────────────────────── */
+    const prevBtn = document.getElementById('sec-audit-prev');
+    const nextBtn = document.getElementById('sec-audit-next');
+    if (prevBtn) prevBtn.addEventListener('click', () => { if (_secPage > 0) { _secPage--; renderAuditTable(); } });
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      const filtered = getFilteredLogs();
+      if ((_secPage + 1) * SEC_PAGE_SIZE < filtered.length) { _secPage++; renderAuditTable(); }
+    });
+
+    /* ── Refresh ────────────────────────────────────────────── */
+    const refBtn = document.getElementById('sec-refresh-btn');
+    if (refBtn) refBtn.addEventListener('click', () => startAuditListener());
+
+    /* ── Экспорт лога ───────────────────────────────────────── */
+    const expBtn = document.getElementById('sec-export-btn');
+    if (expBtn) expBtn.addEventListener('click', exportAuditLog);
+
+    /* Запускаем realtime-слушатель */
+    startAuditListener();
+    loadSecAdmins();
+    loadSecEvents();
+    buildChecklist();
+  }
+
+  /* ── Realtime listener на audit_logs ────────────────────── */
+  function startAuditListener() {
+    if (_auditUnsub) _auditUnsub(); /* отписываемся от предыдущего */
+    const q = query(
+      collection(fdb, 'audit_logs'),
+      orderBy('clientTs', 'desc'),
+      limit(500)
+    );
+    _auditUnsub = onSnapshot(q, snap => {
+      _allLogs = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      _secPage = 0;
+      renderAuditTable();
+      updateSecKpis();
+    }, err => {
+      /* Коллекция ещё пуста или нет прав — показываем пустое состояние */
+      _allLogs = [];
+      renderAuditTable();
+    });
+  }
+
+  /* ── Форматирование даты ────────────────────────────────── */
+  function fmtTs(log) {
+    const ts = log.createdAt?.toDate?.() || (log.clientTs ? new Date(log.clientTs) : null);
+    if (!ts) return '—';
+    return ts.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  /* ── Severity badge ─────────────────────────────────────── */
+  function sevBadge(sev) {
+    const map = { info:'info', warning:'warning', critical:'critical' };
+    const labels = { info:'Info', warning:'Warning', critical:'Critical' };
+    const cls = map[sev] || 'info';
+    return `<span class="sev sev-${cls}">${labels[sev]||sev}</span>`;
+  }
+
+  /* ── Action badge ───────────────────────────────────────── */
+  function actBadge(action) {
+    const labels = { login:'Вход', logout:'Выход', create:'Создание', update:'Изменение',
+                     delete:'Удаление', export:'Экспорт', view:'Просмотр' };
+    return `<span class="act-badge">${labels[action]||action}</span>`;
+  }
+
+  /* ── Применить фильтры ──────────────────────────────────── */
+  function getFilteredLogs() {
+    const fAction = (document.getElementById('sec-filter-action')?.value||'').toLowerCase();
+    const fSev    = (document.getElementById('sec-filter-sev')?.value||'').toLowerCase();
+    const fMod    = (document.getElementById('sec-filter-module')?.value||'').toLowerCase();
+    const fSearch = (document.getElementById('sec-filter-search')?.value||'').toLowerCase();
+    return _allLogs.filter(l => {
+      if (fAction && l.action !== fAction) return false;
+      if (fSev    && l.severity !== fSev)  return false;
+      if (fMod    && l.module !== fMod)    return false;
+      if (fSearch) {
+        const hay = ((l.userEmail||'') + (l.description||'') + (l.userName||'')).toLowerCase();
+        if (!hay.includes(fSearch)) return false;
+      }
+      return true;
+    });
+  }
+
+  /* ── Рендер таблицы аудита ──────────────────────────────── */
+  function renderAuditTable() {
+    const tbody  = document.getElementById('sec-audit-tbody');
+    const info   = document.getElementById('sec-audit-info');
+    const prev   = document.getElementById('sec-audit-prev');
+    const next   = document.getElementById('sec-audit-next');
+    const cntEl  = document.getElementById('sec-audit-count');
+    if (!tbody) return;
+
+    const filtered = getFilteredLogs();
+    const total    = filtered.length;
+    const start    = _secPage * SEC_PAGE_SIZE;
+    const page     = filtered.slice(start, start + SEC_PAGE_SIZE);
+
+    if (cntEl) cntEl.textContent = total > 0 ? total : '';
+    if (info)  info.textContent  = total === 0 ? 'Нет записей' : `${start+1}–${Math.min(start+page.length, total)} из ${total}`;
+    if (prev)  prev.disabled = _secPage === 0;
+    if (next)  next.disabled = start + SEC_PAGE_SIZE >= total;
+
+    if (page.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">
+        ${_allLogs.length === 0 ? 'Аудит лог пуст — действия будут появляться здесь автоматически' : 'По фильтру ничего не найдено'}
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = page.map(l => `
+      <tr>
+        <td style="color:var(--muted);font-size:.66rem;white-space:nowrap">${fmtTs(l)}</td>
+        <td>
+          <div style="font-size:.72rem;color:var(--text)">${l.userName||'—'}</div>
+          <div style="font-size:.62rem;color:var(--muted)">${l.userEmail||''}</div>
+        </td>
+        <td class="hide-mob" style="color:var(--muted);text-transform:capitalize">${l.module||'—'}</td>
+        <td>${actBadge(l.action)}</td>
+        <td style="color:var(--muted);font-size:.70rem;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${(l.description||'').replace(/"/g,'&quot;')}">${l.description||'—'}</td>
+        <td class="hide-mob">${sevBadge(l.severity||'info')}</td>
+      </tr>`).join('');
+  }
+
+  /* ── KPI обновление ─────────────────────────────────────── */
+  function updateSecKpis() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayTs = today.getTime();
+
+    const todayLogs  = _allLogs.filter(l => (l.clientTs||0) >= todayTs);
+    const logins     = todayLogs.filter(l => l.action === 'login');
+    const changes    = todayLogs.filter(l => ['create','update','delete'].includes(l.action));
+    const warnings   = todayLogs.filter(l => ['warning','critical'].includes(l.severity));
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText('sec-kpi-today',        todayLogs.length);
+    setText('sec-kpi-today-sub',    'всего за сегодня');
+    setText('sec-kpi-logins',       logins.length);
+    setText('sec-kpi-logins-sub',   'успешных входов');
+    setText('sec-kpi-changes',      changes.length);
+    setText('sec-kpi-changes-sub',  'записей изменено');
+    setText('sec-kpi-warn',         warnings.length);
+    setText('sec-kpi-warn-sub',     warnings.length > 0 ? '⚠ требует внимания' : 'всё в порядке');
+
+    /* Бейдж в сайдбаре */
+    const badge = document.getElementById('sb-sec-badge');
+    if (badge) {
+      const crits = _allLogs.filter(l => l.severity === 'critical').length;
+      badge.style.display = crits > 0 ? '' : 'none';
+      badge.textContent = crits > 0 ? crits : '';
+    }
+
+    /* Красная точка во вкладке «События» */
+    const dot = document.getElementById('sec-warn-dot');
+    if (dot) dot.style.display = warnings.length > 0 ? 'inline-block' : 'none';
+  }
+
+  /* ── Список администраторов ─────────────────────────────── */
+  async function loadSecAdmins() {
+    const container = document.getElementById('sec-admins-list');
+    const onlineEl  = document.getElementById('sec-admins-online');
+    if (!container) return;
+    try {
+      const snap = await getDocs(query(collection(fdb, 'users'), where('role', '==', 'admin')));
+      if (snap.empty) {
+        /* Fallback: показываем текущего пользователя */
+        const u = auth.currentUser;
+        renderAdminsList([{ uid: u?.uid, displayName: u?.displayName||u?.email, email: u?.email, role:'admin' }], onlineEl, container);
+        return;
+      }
+      const admins = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      renderAdminsList(admins, onlineEl, container);
+    } catch(e) {
+      const u = auth.currentUser;
+      renderAdminsList([{ uid: u?.uid, displayName: u?.displayName||u?.email, email: u?.email, role:'admin' }], onlineEl, container);
+    }
+  }
+
+  function renderAdminsList(admins, onlineEl, container) {
+    if (onlineEl) onlineEl.textContent = admins.length + ' чел.';
+    container.innerHTML = admins.map(a => {
+      const init = (a.displayName||a.email||'?').charAt(0).toUpperCase();
+      const isCurrentUser = a.uid === auth.currentUser?.uid;
+      return `<div class="admin-row">
+        <div style="width:32px;height:32px;background:var(--accent-dim);border:1px solid var(--accent-mid);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--accent);flex-shrink:0">${init}</div>
+        <div>
+          <div style="font-size:.76rem;font-weight:500">${a.displayName||'—'} ${isCurrentUser ? '<span style="font-size:.58rem;color:var(--muted);margin-left:4px">(вы)</span>' : ''}</div>
+          <div style="font-size:.64rem;color:var(--muted)">${a.email||'—'}</div>
+        </div>
+        <span class="admin-online on" title="Активен"></span>
+        <span style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);background:var(--accent-dim);padding:2px 8px">${a.role||'admin'}</span>
+        ${isCurrentUser ? '' : '<button class="btn btn-sm" style="font-size:.6rem;padding:4px 10px" disabled>Управление</button>'}
+      </div>`;
+    }).join('');
+  }
+
+  /* ── События: входы и удаления ──────────────────────────── */
+  async function loadSecEvents() {
+    /* Последние 5 входов */
+    const loginsEl  = document.getElementById('sec-events-logins');
+    const deletesEl = document.getElementById('sec-events-deletes');
+
+    const loginLogs  = _allLogs.filter(l => l.action === 'login').slice(0, 8);
+    const deleteLogs = _allLogs.filter(l => l.action === 'delete').slice(0, 8);
+
+    const renderList = (items, el, emptyMsg) => {
+      if (!el) return;
+      if (!items.length) { el.innerHTML = `<div style="color:var(--muted-2);font-size:.7rem">${emptyMsg}</div>`; return; }
+      el.innerHTML = items.map(l => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0;background:${l.action==='delete'?'var(--red)':'var(--green)'}"></div>
+          <div>
+            <div style="font-size:.72rem;color:var(--text)">${l.userName||l.userEmail||'—'}</div>
+            <div style="font-size:.63rem;color:var(--muted)">${fmtTs(l)}</div>
+          </div>
+        </div>`).join('');
+    };
+
+    renderList(loginLogs,  loginsEl,  'Входов пока нет — они появятся после авторизации');
+    renderList(deleteLogs, deletesEl, 'Удалений нет — все данные в сохранности');
+  }
+
+  /* ── Чеклист безопасности ───────────────────────────────── */
+  function buildChecklist() {
+    const el = document.getElementById('sec-checklist');
+    if (!el) return;
+    const checks = [
+      { label: 'Аудит лог активен',             ok: true,  note: 'События пишутся в Firestore' },
+      { label: 'Firestore Security Rules',       ok: false, note: 'Настройте rules.firestore — сейчас БД открыта' },
+      { label: 'Ограничение домена для API ключа', ok: false, note: 'Firebase Console → App Check или ограничение домена' },
+      { label: 'Поле роли вне формы профиля',   ok: false, note: 'Роль не должна меняться пользователем самостоятельно' },
+      { label: 'Двухфакторная аутентификация',   ok: false, note: 'Включить в Firebase Console → Authentication' },
+    ];
+    el.innerHTML = checks.map(c => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-top:1px;
+          background:${c.ok ? 'rgba(76,175,130,.15)' : 'rgba(208,96,112,.10)'};
+          border:1px solid ${c.ok ? 'rgba(76,175,130,.3)' : 'rgba(208,96,112,.25)'}">
+          ${c.ok
+            ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#4caf82" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            : '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 3l4 4M7 3l-4 4" stroke="#d06070" stroke-width="1.3" stroke-linecap="round"/></svg>'
+          }
+        </div>
+        <div>
+          <div style="font-size:.73rem;color:${c.ok ? 'var(--text)' : 'var(--muted)'}">${c.label}</div>
+          <div style="font-size:.63rem;color:var(--muted-2);margin-top:2px">${c.note}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Экспорт лога ───────────────────────────────────────── */
+  function exportAuditLog() {
+    const data = getFilteredLogs().map(l => ({
+      time:        fmtTs(l),
+      user:        l.userName || l.userEmail || '—',
+      email:       l.userEmail,
+      action:      l.action,
+      module:      l.module,
+      description: l.description,
+      severity:    l.severity
+    }));
+    const csv = ['Время,Пользователь,Email,Действие,Модуль,Описание,Уровень',
+      ...data.map(r => Object.values(r).map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(','))
+    ].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'audit_log_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    writeAudit({ action:'export', module:'security', description:'Экспорт аудит лога (' + data.length + ' записей)', severity:'info' });
+  }
 
 </script>
 
