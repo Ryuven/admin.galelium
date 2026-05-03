@@ -2292,6 +2292,7 @@
 
 <!-- ══ ДРОВЕР РЕДАКТОРА НОВОСТЕЙ ════════════════════════════ -->
 <div class="drawer-overlay" id="nws-overlay"></div>
+<input type="file" id="nws-import-input" accept=".json,application/json" style="display:none" />
 <div class="drawer" id="nws-drawer" style="width:min(640px,100vw)">
   <div class="drawer-head">
     <div class="drawer-head-text">
@@ -2299,6 +2300,11 @@
       <div class="drawer-head-sub" id="nws-dr-sub">Firestore /news</div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
+      <!-- Импорт JSON -->
+      <button id="nws-import-btn" title="Импортировать из JSON файла" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;cursor:pointer;transition:all var(--tf);font-family:var(--font)">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v7M2 6l3.5 3.5L9 6M1 10h9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Импорт
+      </button>
       <!-- Статус переключатель -->
       <div style="display:flex;gap:0;border:1px solid var(--border);overflow:hidden">
         <button class="nws-status-btn active" data-status="published" id="nws-btn-pub" style="padding:5px 12px;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;background:none;border:none;cursor:pointer;color:var(--muted);transition:background var(--tf),color var(--tf)">Опубликовать</button>
@@ -4619,6 +4625,55 @@
       } finally {
         if (btn) { btn.disabled = false; }
       }
+    }
+
+    /* ── Импорт JSON статьи ────────────────────────────────── */
+    const nwsImportBtn   = document.getElementById('nws-import-btn');
+    const nwsImportInput = document.getElementById('nws-import-input');
+
+    if (nwsImportBtn) {
+      nwsImportBtn.addEventListener('mouseenter', () => { nwsImportBtn.style.borderColor = 'rgba(200,169,110,.35)'; nwsImportBtn.style.color = '#c8a96e'; });
+      nwsImportBtn.addEventListener('mouseleave', () => { nwsImportBtn.style.borderColor = 'rgba(255,255,255,.1)'; nwsImportBtn.style.color = 'rgba(255,255,255,.45)'; });
+      nwsImportBtn.addEventListener('click', () => nwsImportInput?.click());
+    }
+
+    if (nwsImportInput) {
+      nwsImportInput.addEventListener('change', async function() {
+        const file = this.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+
+          /* Заполняем поля */
+          const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+          set('nws-inp-title',   data.title   || '');
+          set('nws-inp-tag',     data.tag     || data.category || '');
+          set('nws-inp-date',    data.date    || new Date().toISOString().slice(0,10));
+          set('nws-inp-summary', data.summary || '');
+          set('nws-inp-body',    data.body    || '');
+          set('nws-inp-author',  data.author  || '');
+          set('nws-inp-image',   data.image   || '');
+          set('nws-inp-meta',    data.metaDesc|| '');
+          set('nws-inp-slug',    data.slug    || '');
+
+          /* Триггерим счётчики символов */
+          ['nws-inp-summary','nws-inp-body'].forEach(id => {
+            document.getElementById(id)?.dispatchEvent(new Event('input'));
+          });
+
+          /* Меняем статус черновик если не задан */
+          const statusBtn = document.getElementById('nws-btn-draft');
+          if (statusBtn && !data.status) statusBtn.click();
+
+          toast('JSON импортирован — проверьте и опубликуйте', 'ok');
+          writeAudit({ action:'create', module:'news', description:'Импорт статьи из JSON: ' + (data.title||'—'), severity:'info' });
+        } catch(e) {
+          toast('Ошибка импорта: ' + e.message, 'err');
+        }
+        /* Сбрасываем input чтобы можно было выбрать тот же файл снова */
+        this.value = '';
+      });
     }
 
     document.getElementById('nws-dr-save')?.addEventListener('click', () => saveNewsToFirestore(newsStatus));
